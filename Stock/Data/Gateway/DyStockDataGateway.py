@@ -537,12 +537,16 @@ class DyStockDataGateway(object):
         return df
 
     def _getStockCodesFromTuShare(self):
+        self._info.print("开始从TuShare获取股票代码表...")
+
         try:
             df = ts.get_today_all() # it's slow because TuShare will get one page by one page
         except Exception as ex:
+            self._info.print("从TuShare获取股票代码表异常: {}".format(ex), DyLogData.error)
             return None
 
         if df is None or df.empty:
+            self._info.print("从TuShare获取股票代码表为空", DyLogData.error)
             return None
 
         codes = {}
@@ -553,6 +557,7 @@ class DyStockDataGateway(object):
             else:
                 codes[code + '.SZ'] = name
 
+        self._info.print("从TuShare获取股票代码表成功")
         return codes
 
     def _getDaysFrom163(self, code, startDate, endDate, retry_count=3, pause=0.001):

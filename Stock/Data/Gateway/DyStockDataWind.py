@@ -129,6 +129,7 @@ class DyStockDataWind(object):
         for code, name in zip(data.Data[1], data.Data[2]):
             codes[code] = name
 
+        self._info.print("从Wind获取股票代码表成功")
         return codes
 
     def getSectorStockCodes(self, sectorCode, startDate, endDate):

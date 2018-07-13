@@ -291,10 +291,17 @@ class DyStockDataCodeTable:
 
         # always getting from Gateway
         codes = self._gateway.getStockCodes()
-        if codes is None: return False
+        if codes is None:
+            self._info.print('更新股票代码表失败', DyLogData.error)
+            return False
 
         # set codes gotten from Gateway to DB
-        return self._set(codes)
+        if not self._set(codes):
+            self._info.print('更新股票代码表失败', DyLogData.error)
+            return False
+
+        self._info.print('股票代码表更新完成')
+        return True
 
     def _print(self, newCode, newName, exit):
         if not (newCode or newName or exit):
