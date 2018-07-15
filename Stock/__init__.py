@@ -11,6 +11,9 @@ except ImportError:
 import os
 import importlib
 
+
+DyStockTradeStrategyClsMap = {}
+
 # dynamically load strategies from specific package, like 'Stock.Trade.Strategy'
 def __loadStrategies(dir, packageCommonPrefix, onlyDir=True):
     fields = []
@@ -38,7 +41,10 @@ def __loadStrategies(dir, packageCommonPrefix, onlyDir=True):
 
                 module = importlib.import_module('{}.{}'.format(packagePrefix, file[:-3]))
 
-                strategyCls = module.__getattribute__(file[:-3])
+                strategyClsName = file[:-3]
+                strategyCls = module.__getattribute__(strategyClsName)
+
+                DyStockTradeStrategyClsMap[strategyClsName] = strategyCls
 
                 fields.append([strategyCls]) # strategy class
 

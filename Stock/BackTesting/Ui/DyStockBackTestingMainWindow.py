@@ -12,6 +12,7 @@ from ..Engine.DyStockBackTestingMainEngine import *
 from ...Select.Ui.Other.DyStockSelectTestedStocksDlg import *
 from ...Common.Ui.DyStockMaViewerIndicatorMenu import *
 from .Other.DyStockBackTestingSettingDlg import *
+from Stock import DyStockTradeStrategyClsMap
 
 
 class DyStockBackTestingMainWindow(DyBasicMainWindow):
@@ -179,7 +180,10 @@ class DyStockBackTestingMainWindow(DyBasicMainWindow):
         if not strategyClsName:
             return
 
-        strategyCls = eval(strategyClsName)
+        strategyCls = DyStockTradeStrategyClsMap.get(strategyClsName)
+        if strategyCls is None:
+            QMessageBox.warning(self, '错误', '没有找到实盘策略: {}'.format(strategyClsName))
+            return
 
         # load
         self._widgetResult.loadDeals(data, strategyCls)
