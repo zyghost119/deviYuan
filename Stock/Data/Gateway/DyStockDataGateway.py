@@ -156,8 +156,6 @@ class DyStockDataTicksGateway(object):
                 re = Request('http://market.finance.sina.com.cn/downxls.php?date={}&symbol={}'.format(date, symbol))
                 lines = urlopen(re, timeout=10).read()
                 lines = lines.decode('GBK') 
-                if len(lines) < 20:
-                    return None
                 df = pd.read_table(StringIO(lines), names=['time', 'price', 'change', 'volume', 'amount', 'type'],
                                    skiprows=[0])      
             except Exception as e:
@@ -217,7 +215,8 @@ class DyStockDataTicksGateway(object):
         try:
             df = func(code[:-3], date=date)
 
-            del df['change']
+            if 'change' in df:
+                del df['change']
 
             df = df.dropna() # sometimes Sina will give wrong data that price is NaN
             df = df[df['volume'] > 0] # !!!drop 0 volume, added 2017/05/30, sometimes Sina contains tick with 0 volume.
