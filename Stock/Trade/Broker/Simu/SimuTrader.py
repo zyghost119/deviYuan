@@ -23,7 +23,7 @@ class SimuTrader(WebTrader):
     dealHeader = ['证券名称', '证券代码', '合同号', '交易类型', '成交价', '成交数', '成交额', '成交时间']
     entrustHeader = ['委托序号', '证券代码', '证券名称', '类型', '委托价格', '委托数量', '委托时间', '成交数量', '委托状态']
     balanceHeader = ['可用余额', '证券市值', '资产总值']
-    positionHeader = ['证券代码', '证券名称', '实际数量', '可用数量', '市值(元)', '最新价格', '成本价(元)', '浮动盈亏(元)', '盈亏比(%)', '除权除息'] # 国泰君安没有'盈亏比(%)'和'除权除息'字段
+    positionHeader = ['证券代码', '证券名称', '实际数量', '可用数量', '市值(元)', '最新价格', '成本价(元)', '浮动盈亏(元)', '盈亏比(%)', '除权除息', '建仓时间'] # 国泰君安没有'盈亏比(%)'和'除权除息'字段
 
     accountPath = 'Stock/Program/Broker/{0}'.format(brokerName)
     initCash = 200000
@@ -301,12 +301,12 @@ class SimuTrader(WebTrader):
                 pos[5] = price
                 pos[6] = cost
                 pos[7] = (price - cost)*totalVolume
-                pos[-2] = (price - pos[6])/pos[6]*100 if pos[6] > 0 else 'N/A'
+                pos[8] = (price - pos[6])/pos[6]*100 if pos[6] > 0 else 'N/A'
                 break
 
         else: # new position
             cost = dealAmount/volume
-            self._positions.append([code, name, volume, 0 if DyStockTradeCommon.T1 else volume, price*volume, price, cost, (price - cost)*volume, (price - cost)/cost*100, '否'])
+            self._positions.append([code, name, volume, 0 if DyStockTradeCommon.T1 else volume, price*volume, price, cost, (price - cost)*volume, (price - cost)/cost*100, '否', time])
 
         # balance
         self._balance[0] = availCash
@@ -373,7 +373,7 @@ class SimuTrader(WebTrader):
         pos[5] = price
         pos[6] = cost
         pos[7] = (price - cost)*totalVolume
-        pos[-2] = (price - pos[6])/pos[6]*100 if pos[6] > 0 else 'N/A'
+        pos[8] = (price - pos[6])/pos[6]*100 if pos[6] > 0 else 'N/A'
 
         # balance
         self._balance[0] = availCash
@@ -443,7 +443,7 @@ class SimuTrader(WebTrader):
             pos[4] = tick.price*pos[2]
             pos[5] = tick.price
             pos[7] = (tick.price - pos[6])*pos[2]
-            pos[-2] = (tick.price - pos[6])/pos[6]*100 if pos[6] > 0 else 'N/A'
+            pos[8] = (tick.price - pos[6])/pos[6]*100 if pos[6] > 0 else 'N/A'
 
             marketValue += pos[4]
 
@@ -486,7 +486,7 @@ class SimuTrader(WebTrader):
             pos[3] /= adjFactor
             pos[6] *= adjFactor
 
-            pos[-1] = '否' if adjFactor == 1 else '是'
+            pos[9] = '否' if adjFactor == 1 else '是'
 
         # If xrxd, need to update again
         # Here for simplicity, no matter xrxd or not, always update.

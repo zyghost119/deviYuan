@@ -9,7 +9,7 @@ class DyStockTradeStrategyPosWidget(DyTableWidget):
 
     stockMarketTicksSignal = QtCore.pyqtSignal(type(DyEvent()))
 
-    header = ['代码', '名称', '总数量/可用数量(股)', '成本价(元)', '现价(元)', '市值(元)', '盈亏(元)', '盈亏比(%)', '除权除息']
+    header = ['代码', '名称', '总数量/可用数量(股)', '成本价(元)', '现价(元)', '市值(元)', '盈亏(元)', '盈亏比(%)', '除权除息', '建仓时间']
 
 
     def __init__(self, eventEngine, strategyCls):
@@ -24,13 +24,20 @@ class DyStockTradeStrategyPosWidget(DyTableWidget):
         self._curPos = {}
 
     def _updatePos(self, pos):
+        datetime_ = pos.datetime
+        try:
+            datetime_ = pos.datetime.strftime("%Y-%m-%d %H:%M:%S")
+        except:
+            pass
+
         self[pos.code] = [pos.code, pos.name,
                       '%.3f/%.3f'%(pos.totalVolume, pos.availVolume),
                        pos.cost, pos.price,
                        pos.totalVolume*pos.price,
                        pos.totalVolume*(pos.price - pos.cost),
                        (pos.price - pos.cost)/pos.cost*100 if pos.cost > 0 else 'N/A',
-                       '是' if pos.xrd else '否'
+                       '是' if pos.xrd else '否',
+                       datetime_
                        ]
 
     def update(self, positions):
