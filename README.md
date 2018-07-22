@@ -47,6 +47,7 @@ DevilYuan股票量化系统由python编写，支持python3.4及以上版本，�
     - 本项目是用VS2017开发的。你可以选择是用VS2017，或者用其他IDE 
 - 需要安装的Python包
     - tushare
+    - 
     - pymongo
     - qdarkstyle
     - pytesseract
