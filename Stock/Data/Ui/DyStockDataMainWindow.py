@@ -247,7 +247,7 @@ class DyStockDataMainWindow(DyBasicMainWindow):
         self._histTicksDataSourceMenu = QMenu(self)
 
         # 创建历史分笔数据源菜单的操作
-        actions = [QAction(x, self) for x in ['新浪', '腾讯', '智能']]
+        actions = [QAction(x, self) for x in ['腾讯', '通达信', '智能']]
         for action in actions:
             action.setCheckable(True)
             action.triggered.connect(self._histTicksDataSourceAct)
@@ -257,7 +257,7 @@ class DyStockDataMainWindow(DyBasicMainWindow):
             if action.text() == DyStockDataCommon.defaultHistTicksDataSource:
                 action.setChecked(True)
                 self._curHistTicksDataSourceAction = action
-                self._histTicksDataSourceMenuAction.setText('历史分笔数据源:{0}'.format(DyStockDataCommon.defaultHistTicksDataSource))
+                self._histTicksDataSourceMenuAction.setText('历史分笔数据源:{}'.format(DyStockDataCommon.defaultHistTicksDataSource))
 
     def _initMenu(self):
         """初始化菜单"""
@@ -392,6 +392,9 @@ class DyStockDataMainWindow(DyBasicMainWindow):
             if action.isChecked():
                 # 设置历史分笔数据源
                 dataSource = action.text()
+
+                # set default
+                DyStockDataCommon.defaultHistTicksDataSource = dataSource
 
                 event = DyEvent(DyEventType.updateHistTicksDataSource)
                 event.data = dataSource

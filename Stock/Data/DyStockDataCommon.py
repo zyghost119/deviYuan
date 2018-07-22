@@ -1,6 +1,7 @@
-DY_STOCK_DATA_HIST_TICKS_HAND_NBR = 2
+
 
 class DyStockDataEventHandType:
+    DY_STOCK_DATA_HIST_TICKS_HAND_NBR = 5 # TDX support max 5 live connections
     
     stockHistTicksHandNbr = DY_STOCK_DATA_HIST_TICKS_HAND_NBR
     ticksEngine = DY_STOCK_DATA_HIST_TICKS_HAND_NBR

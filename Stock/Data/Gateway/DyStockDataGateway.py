@@ -18,279 +18,18 @@ from EventEngine.DyEvent import *
 from ..DyStockDataCommon import *
 from .DyStockDataWind import *
 from ...Common.DyStockCommon import *
-
-
-class DyStockDataTicksGateway(object):
-    """
-        股票历史分笔数据网络接口
-        分笔数据可以从新浪，腾讯，网易获取
-        每个hand一个实例，这样可以防止数据互斥
-    """
-
-
-    def __init__(self, eventEngine, info, hand):
-        self._eventEngine = eventEngine
-        self._info = info
-        self._hand = hand
-
-        self._setTicksDataSource(DyStockDataCommon.defaultHistTicksDataSource)
-
-        self._registerEvent()
-
-    def _codeTo163Symbol(code):
-        if code[0] in ['5', '6']:
-            return '0' + code
-
-        return '1' + code
-
-    def _getTickDataFrom163(code=None, date=None, retry_count=3, pause=0.001):
-        """
-            从网易获取分笔数据
-            网易的分笔数据只有最近5日的
-            接口和返回的DF，保持跟tushare一致
-        Parameters
-        ------
-            code:string
-                        股票代码 e.g. 600848
-            date:string
-                        日期 format：YYYY-MM-DD
-            retry_count : int, 默认 3
-                        如遇网络等问题重复执行的次数
-            pause : int, 默认 0
-                        重复请求数据过程中暂停的秒数，防止请求间隔时间太短出现的问题
-            return
-            -------
-            DataFrame 当日所有股票交易数据(DataFrame)
-                    属性:成交时间、成交价格、价格变动，成交手、成交金额(元)，买卖类型
-        """
-        if code is None or len(code)!=6 or date is None:
-            return None
-        symbol = DyStockDataTicksGateway._codeTo163Symbol(code)
-        yyyy, mm, dd = date.split('-')
-        for _ in range(retry_count):
-            sleep(pause)
-            try:
-                url = 'http://quotes.money.163.com/cjmx/{0}/{1}/{2}.xls'.format(yyyy, yyyy+mm+dd, symbol)
-                socket = urlopen(url)
-                xd = pd.ExcelFile(socket)
-                df = xd.parse(xd.sheet_names[0], names=['time', 'price', 'change', 'volume', 'amount', 'type'])
-                df['amount'] = df['amount'].astype('int64') # keep same as tushare
-            except Exception as e:
-                print(e)
-                ex = e
-            else:
-                return df
-        raise ex
-
-    def _codeToTencentSymbol(code):
-        if code[0] in ['5', '6']:
-            return 'sh' + code
-
-        return 'sz' + code
-
-    def _getTickDataFromTencent(code=None, date=None, retry_count=3, pause=0.001):
-        """
-            从腾讯获取分笔数据
-            接口和返回的DF，保持跟tushare一致
-        Parameters
-        ------
-            code:string
-                        股票代码 e.g. 600848
-            date:string
-                        日期 format：YYYY-MM-DD
-            retry_count : int, 默认 3
-                        如遇网络等问题重复执行的次数
-            pause : int, 默认 0
-                        重复请求数据过程中暂停的秒数，防止请求间隔时间太短出现的问题
-            return
-            -------
-            DataFrame 当日所有股票交易数据(DataFrame)
-                    属性:成交时间、成交价格、价格变动，成交手、成交金额(元)，买卖类型
-        """
-        if code is None or len(code)!=6 or date is None:
-            return None
-        symbol = DyStockDataTicksGateway._codeToTencentSymbol(code)
-        yyyy, mm, dd = date.split('-')
-        for _ in range(retry_count):
-            sleep(pause)
-            try:
-                re = Request('http://stock.gtimg.cn/data/index.php?appn=detail&action=download&c={0}&d={1}'.format(symbol, yyyy+mm+dd))
-                lines = urlopen(re, timeout=10).read()
-                lines = lines.decode('GBK') 
-                df = pd.read_table(StringIO(lines), names=['time', 'price', 'change', 'volume', 'amount', 'type'],
-                                    skiprows=[0])      
-            except Exception as e:
-                print(e)
-                ex = e
-            else:
-                return df
-        raise ex
-
-    def _codeToSinaSymbol(code):
-        return DyStockDataTicksGateway._codeToTencentSymbol(code)
-
-    def _getTickDataFromSina(code=None, date=None, retry_count=3, pause=0.001):
-        """
-            获取分笔数据
-        Parameters
-        ------
-            code:string
-                      股票代码 e.g. 600848
-            date:string
-                      日期 format：YYYY-MM-DD
-            retry_count : int, 默认 3
-                      如遇网络等问题重复执行的次数
-            pause : int, 默认 0
-                     重复请求数据过程中暂停的秒数，防止请求间隔时间太短出现的问题
-         return
-         -------
-            DataFrame 当日所有股票交易数据(DataFrame)
-                  属性:成交时间、成交价格、价格变动，成交手、成交金额(元)，买卖类型
-        """
-        if code is None or len(code)!=6 or date is None:
-            return None
-        symbol = DyStockDataTicksGateway._codeToSinaSymbol(code)
-        for _ in range(retry_count):
-            sleep(pause)
-            try:
-                re = Request('http://market.finance.sina.com.cn/downxls.php?date={}&symbol={}'.format(date, symbol))
-                lines = urlopen(re, timeout=10).read()
-                lines = lines.decode('GBK') 
-                df = pd.read_table(StringIO(lines), names=['time', 'price', 'change', 'volume', 'amount', 'type'],
-                                   skiprows=[0])      
-            except Exception as e:
-                print(e)
-                ex = e
-            else:
-                return df
-        raise ex
-
-    def _getTicks(self, code, date):
-        """
-            get history ticks data from network
-            @returns: None - error happened, i.e. timer out or errors from server
-                             If error happened, ticks engine will retry it.
-                      DyStockHistTicksAckData.noData - no data for specified date
-                      BSON format data - sucessful situation
-        """
-        switch = False
-
-        for i, func in enumerate(self._ticksDataSource):
-            # get ticks from data source
-            data = self._getTicksByFunc(func, code, date)
-
-            # 如果数据源应该有数据却没有数据或者发生错误，则换个数据源获取
-            if data == DyStockHistTicksAckData.noData or data is None:
-                # fatal error from data source
-                if data is None:
-                    self._ticksDataSourceErrorCount[i] += 1
-
-                    if self._ticksDataSourceErrorCount[i] >= 3:
-                        switch = True
-                        self._ticksDataSourceErrorCount[i] = 0
-
-            else: # 超时或者有数据, we don't think timer out as needed to switch data source, which might happen because of network
-                break
-
-        # Too many errors happend for data source, so we think it as fatal error and then switch data source
-        if switch:
-            oldTicksDataSourceName = self._ticksDataSourceName
-
-            self._ticksDataSource = self._ticksDataSource[1:] + self._ticksDataSource[0:1]
-            self._ticksDataSourceName = self._ticksDataSourceName[1:] + self._ticksDataSourceName[0:1]
-            self._ticksDataSourceErrorCount = self._ticksDataSourceErrorCount[1:] + self._ticksDataSourceErrorCount[0:1]
-
-            self._info.print('Hand {}: 历史分笔数据源切换{}->{}'.format(self._hand, oldTicksDataSourceName, self._ticksDataSourceName), DyLogData.warning)
-
-        # convert return value to retain same interface for ticks engine
-        return None if data == 'timer out' else data
-
-    def _getTicksByFunc(self, func, code, date):
-        """
-            @return: [{indicator: value}], i.e. MongoDB BSON format
-                     None - fatal error from server
-                     DyStockHistTicksAckData.noData - no data for sepcified date
-                     'timer out'
-        """
-        try:
-            df = func(code[:-3], date=date)
-
-            if 'change' in df:
-                del df['change']
-
-            df = df.dropna() # sometimes Sina will give wrong data that price is NaN
-            df = df[df['volume'] > 0] # !!!drop 0 volume, added 2017/05/30, sometimes Sina contains tick with 0 volume.
-            df = df.drop_duplicates(['time']) # drop duplicates
-
-            # sometimes Sina will give wrong time format like some time for 002324.SZ at 2013-03-18 is '14.06'
-            while True:
-                try:
-                    df['time']  =  pd.to_datetime(date + ' ' + df['time'], format='%Y-%m-%d %H:%M:%S')
-                except ValueError as ex:
-                    strEx = str(ex)
-                    errorTime = strEx[strEx.find(date) + len(date) + 1:strEx.rfind("'")]
-                    df = df[~(df['time'] == errorTime)]
-                    continue
-                break
-
-            df.rename(columns={'time': 'datetime'}, inplace=True)
-
-            df = df.T
-            data = [] if df.empty else list(df.to_dict().values())
-
-        except Exception as ex:
-            if '当天没有数据' in str(ex):
-                return DyStockHistTicksAckData.noData
-            else:
-                self._info.print("Hand {}: {}获取[{}, {}]Tick数据异常: {}".format(self._hand, func.__name__, code, date, str(ex)), DyLogData.error)
-                if 'timed out' in str(ex):
-                    return 'timer out'
-                else:
-                    return None
-
-        return data if data else DyStockHistTicksAckData.noData
-
-    def _stockHistTicksReqHandler(self, event):
-        code = event.data.code
-        date = event.data.date
-
-        data = self._getTicks(code, date)
-
-        # put ack event
-        event = DyEvent(DyEventType.stockHistTicksAck)
-        event.data = DyStockHistTicksAckData(code, date, data)
-
-        self._eventEngine.put(event)
-
-    def _registerEvent(self):
-        self._eventEngine.register(DyEventType.stockHistTicksReq + str(self._hand), self._stockHistTicksReqHandler, self._hand)
-        self._eventEngine.register(DyEventType.updateHistTicksDataSource, self._updateHistTicksDataSourceHandler, self._hand)
-
-    def _updateHistTicksDataSourceHandler(self, event):
-        self._setTicksDataSource(event.data)
-
-    def _setTicksDataSource(self, dataSource):
-        if dataSource == '新浪':
-            self._ticksDataSource = [self.__class__._getTickDataFromSina]
-            self._ticksDataSourceName = ['新浪']
-        elif dataSource == '腾讯':
-            self._ticksDataSource = [self.__class__._getTickDataFromTencent]
-            self._ticksDataSourceName = ['腾讯']
-        else: # '智能'
-            self._ticksDataSource = [self.__class__._getTickDataFromTencent, self.__class__._getTickDataFromSina]
-            self._ticksDataSourceName = ['腾讯', '新浪']
-            
-        self._ticksDataSourceErrorCount = [0]*len(self._ticksDataSource)
+from .DyStockDataTicksGateway import DyStockDataTicksGateway
+from .DyStockDataTdx import DyStockDataTdx
 
 
 class DyStockDataGateway(object):
     """
         股票数据网络接口
-        日线数据从Wind获取，分笔数据可以从新浪，腾讯，网易获取
+        日线数据从Wind获取，分笔数据可以从新浪，腾讯，网易，通达信获取
     """
     tradeDaysMode = "Verify" # default is verify between Wind and TuShare
 
-    tuShareDaysSleepTimeConst = 2
+    tuShareDaysSleepTimeConst = 0 # It's set by config
     tuShareDaysSleepTime = 0
     tuShareDaysSleepTimeStep = 5
 
@@ -392,7 +131,7 @@ class DyStockDataGateway(object):
 
         # from TuShare
         if 'TuShare' in DyStockCommon.defaultHistDaysDataSource:
-            tuShareCodes = self._getStockCodesFromTuShare()
+            tuShareCodes = self._getStockCodesFromTdx()
             codes = tuShareCodes
 
         # verify
@@ -559,6 +298,27 @@ class DyStockDataGateway(object):
         self._info.print("从TuShare获取股票代码表成功")
         return codes
 
+    def _getStockCodesFromTdx(self):
+        self._info.print("开始从TDX获取股票代码表...")
+
+        tdx = DyStockDataTdx(-1, self._info)
+        df = tdx.getStockCodes()
+        tdx.close()
+        if df is None:
+            self._info.print("从TDX获取股票代码表失败", DyLogData.error)
+            return None
+
+        codes = {}
+        data = df[['code', 'name']].values.tolist()
+        for code, name in data:
+            if code[0] == '6':
+                codes[code + '.SH'] = name
+            else:
+                codes[code + '.SZ'] = name
+
+        self._info.print("从TDX获取股票代码表成功")
+        return codes
+
     def _getDaysFrom163(self, code, startDate, endDate, retry_count=3, pause=0.001):
         """
             从网易获取个股日线数据，指数和基金（ETF）除外
@@ -605,11 +365,9 @@ class DyStockDataGateway(object):
             netEasyDf.index = pd.to_datetime(netEasyDf.index, format='%Y-%m-%d')
 
             # 从新浪获取复权因子，成交量是股。新浪的数据是后复权的，无复权方式是tushare根据复权因子实现的。
-            sleep(self.tuShareDaysSleepTimeConst)
-            sleep(self.tuShareDaysSleepTime)
-
+            sleepTime = self.tuShareDaysSleepTimeConst + self.tuShareDaysSleepTime
             try:
-                sinaDf = ts.get_h_data(tuShareCode, startDate, endDate, autype=None, drop_factor=False)
+                sinaDf = ts.get_h_data(tuShareCode, startDate, endDate, autype=None, drop_factor=False, pause=sleepTime)
             except IOError: # We think Sina is anti-crawling
                 self.tuShareDaysSleepTime += self.tuShareDaysSleepTimeStep
                 print("Sina is anti-crawling, setting additional sleep time to {}s for each request".format(self.tuShareDaysSleepTime))
@@ -623,7 +381,7 @@ class DyStockDataGateway(object):
             else:
                 sinaDf = sinaDf.sort_index()
         except Exception as ex:
-            self._info.print("从TuShare获取{}({})日线数据[{}, {}]失败: {}".format(code, name, startDate, endDate, ex), DyLogData.error)
+            self._info.print("从TuShare获取{}({})日线数据[{}, {}]失败: {}".format(code, name, startDate, endDate, ex), DyLogData.warning)
             return None
 
         # construct new DF
@@ -636,11 +394,12 @@ class DyStockDataGateway(object):
             print("sinaDf")
             print(sinaDf)
 
-            self._info.print("从TuShare获取的{}({})日线数据[{}, {}]格式错误: {}".format(code, name, startDate, endDate, ex), DyLogData.error)
+            self._info.print("从TuShare获取的{}({})日线数据[{}, {}]格式错误: {}".format(code, name, startDate, endDate, ex), DyLogData.warning)
             return None
 
         if df.isnull().sum().sum() > 0:
-            self._info.print("{}({})新浪日线和网易日线数据不一致[{}, {}]: {}".format(code, name, startDate, endDate), DyLogData.warning)
+            self._info.print("{}({})新浪日线和网易日线数据不一致[{}, {}]".format(code, name, startDate, endDate), DyLogData.warning)
+            return None
 
         # change to Wind's indicators
         df.reset_index(inplace=True) # 把时间索引转成列
@@ -661,9 +420,9 @@ class DyStockDataGateway(object):
         """
         tuShareCode = code[:-3]
 
-        sleep(self.tuShareDaysSleepTimeConst)
+        sleepTime = self.tuShareDaysSleepTimeConst + self.tuShareDaysSleepTime
         try:
-            df = ts.get_h_data(tuShareCode, startDate, endDate, index=True)
+            df = ts.get_h_data(tuShareCode, startDate, endDate, index=True, pause=sleepTime)
             if df is None or df.empty: # If no data, TuShare return None
                 df = pd.DataFrame(columns=['open', 'high', 'close', 'low', 'volume', 'amount'])
             else:
@@ -698,10 +457,11 @@ class DyStockDataGateway(object):
         """
         tuShareCode = code[:-3]
 
+        sleepTime = self.tuShareDaysSleepTimeConst + self.tuShareDaysSleepTime
         try:
             # 以无复权方式从腾讯获取OHCLV，成交量是手（整数化过）
             # 此接口支持ETF日线数据
-            df = ts.get_k_data(tuShareCode, startDate, endDate, autype=None).sort_index()
+            df = ts.get_k_data(tuShareCode, startDate, endDate, autype=None, pause=sleepTime).sort_index()
         except Exception as ex:
             self._info.print("从TuShare获取{}({})日线数据[{}, {}]失败: {}".format(code, name, startDate, endDate, ex), DyLogData.error)
             return None

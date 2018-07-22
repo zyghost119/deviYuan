@@ -1,3 +1,4 @@
+import math
 import numpy as np
 
 from EventEngine.DyEvent import *
@@ -15,8 +16,7 @@ class DyStockDataTicksEngine(object):
         !!!由于新浪会有无效历史分笔数据，所以分笔数据的更新依赖日线数据更新。也就是说要先更新日线数据，然后再更新分笔数据。
     """
 
-    batchSize = 10
-    #shiftWindowSize = DyStockDataEventHandType.stockHistTicksHandNbr
+    batchSize = DyStockDataEventHandType.stockHistTicksHandNbr
     shiftWindowSize = 1
 
     def __init__(self, eventEngine, daysEngine, mongoDbEngine, gateway, info, registerEvent=True):
@@ -175,8 +175,9 @@ class DyStockDataTicksEngine(object):
         """ 根据日线数据获取数据库里不存在的分笔数据 """
 
         # load code table and trade days table to check if there're trade days between [startDate, endDate]
-        stockCodes, tdays = self._loadCommon(startDate, endDate)
-        if tdays is None: return None
+        stockCodes, tdays = self._loadCommon(startDate, endDate, codes=codes)
+        if tdays is None:
+            return None
 
         # 载入日线数据
         if tdays:
@@ -242,6 +243,9 @@ class DyStockDataTicksEngine(object):
         # reset counts frislty
         self._inserted2DbCount = 0
         self._noDataCount = 0
+
+        # detect data sources 2018.7.21
+        self._detectDataSources(codes)
 
         # init progress
         self._initProgress(len(codes))
@@ -313,12 +317,11 @@ class DyStockDataTicksEngine(object):
             self._updateWindow() # drain out already sent @stockHistTicksReq events
             return
 
-        if data is None: # set failed to Gateway again
+        if data is None: # sent failed to Gateway again
             self._sendTicksReq(code, date, self._progress.totalReqCount) # just use @self._progress.totalReqCount as request count
 
-        elif data == DyStockHistTicksAckData.noData: # 股票当日没有数据, think it as success
-            if DyStockDataCommon.logDetailsEnabled:
-                self._info.print('{0}:{1}没有[{2}]Ticks数据'.format(code, self._daysEngine.stockCodesFunds.get(code), date), DyLogData.warning)
+        elif data == DyStockHistTicksAckData.noData: # 股票当日没有数据, from current desgin, it should have ticks.
+            self._info.print('￥DyStockDataTicksEngine￥: 获取{}({})Ticks数据[{}]失败'.format(code, self._daysEngine.stockAllCodesFunds.get(code), date), DyLogData.error)
 
             # count firstly
             self._noDataCount += 1
@@ -346,6 +349,83 @@ class DyStockDataTicksEngine(object):
         self._eventEngine.register(DyEventType.stopUpdateStockHistTicksReq, self._stopReqHandler, DyStockDataEventHandType.ticksEngine)
         self._eventEngine.register(DyEventType.verifyStockHistTicks, self._verifyStockHistTicksHandler, DyStockDataEventHandType.ticksEngine)
         self._eventEngine.register(DyEventType.stopVerifyStockHistTicksReq, self._stopReqHandler, DyStockDataEventHandType.ticksEngine)
+
+    def _detectDataSource(self, tdays, func, pause):
+        """
+            binary algorithm
+            @return: date when data source having data
+                None - not specify the date
+                '' - all dates in range that data source don't having data
+                else - date when data source having data(>=date)
+        """
+        self._progress.init(math.ceil(math.log2(len(tdays))) + 1) # roughly
+
+        startDate = ''
+        start, end = 0, len(tdays) - 1
+        while start <= end:
+            mid = (start + end)//2
+            try:
+                # retry 3 times
+                df = func(DyStockCommon.etf50, tdays[mid], retry=3, pause=pause)
+            except:
+                return None
+
+            self._progress.update()
+
+            if df.empty:
+                start = mid + 1
+            else:
+                end = mid - 1
+                startDate = tdays[mid]
+        
+        self._progress.init(0) # done
+        return startDate
+
+    def _detectTdays(self, codes):
+        # get tdays
+        tdays = set()
+        for _, date in codes:
+            tdays.add(date)
+
+        return sorted(tdays)
+        
+    def _detectDataSources(self, codes):
+        """
+            探测腾讯，新浪什么时候提供开始提供分笔数据
+            @codes: [(code, date)]
+        """
+        if DyStockDataCommon.defaultHistTicksDataSource not in ['腾讯', '智能']:
+            return
+
+        self._info.print('开始探测(腾讯)什么时候提供个股(基金)历史分笔数据...')
+
+        tdays = self._detectTdays(codes)
+        if not tdays:
+            self._info.print('无需探测')
+            return
+
+        self._info.print('探测日期[{}, {}]'.format(tdays[0], tdays[-1]))
+
+        # detect
+        dataSources = ( # (func, pause)
+            ('腾讯', DyStockDataTicksGateway._getTickDataFromTencent, 0),
+        )
+
+        dataSoureDetectData = {}
+        for source, func, pause in dataSources:
+            startDate = self._detectDataSource(tdays, func, pause)
+            dataSoureDetectData[source] = startDate
+
+            # print
+            if startDate == '':
+                self._info.print('{}没有提供探测日期内的个股(基金)历史分笔数据'.format(source))
+            elif startDate is None:
+                self._info.print('探测{}失败'.format(source), DyLogData.warning)
+            else:
+                self._info.print('{}从{}开始提供个股(基金)历史分笔数据'.format(source, startDate))
+        
+        # set
+        DyStockDataTicksGateway.setDataSourceStartDate(dataSoureDetectData)
 
     # -------------------- 公共接口 --------------------
     def loadCode(self, code, date):

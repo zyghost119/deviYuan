@@ -159,11 +159,15 @@ class DyStockHistDaysDataSourceConfigDlg(QDialog):
             f.write(json.dumps(data, indent=4))
 
         # tushare days downloading interval
+        data = {}
+        text = self._tuShareDaysIntervalLineEdit.text()
         try:
-            data = {}
-            data["interval"] = int(self._tuShareDaysIntervalLineEdit.text())
+            data["interval"] = int(text)
         except:
-            data = DyStockConfig.defaultTuShareDaysInterval
+            try:
+                data["interval"] = float(text)
+            except:
+                data = DyStockConfig.defaultTuShareDaysInterval
 
         DyStockConfig.configStockTuShareDaysInterval(data)
 

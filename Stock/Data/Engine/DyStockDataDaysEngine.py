@@ -230,6 +230,8 @@ class DyStockDataDaysEngine(object):
         # get from Gateway
         data = self._gateway.getDays(code, startDate, endDate, sorted(data), self.stockAllCodesFunds[code])
         if not data: # None(errors) or no data
+            if data is None: # indicate fetching data error from engine point of view
+                self._info.print("￥DyStockDataDaysEngine￥: 获取{}({})日线数据[{}, {}]失败".format(code, self.stockAllCodesFunds[code], startDate, endDate), DyLogData.error)
             return
 
         # updat to DB
