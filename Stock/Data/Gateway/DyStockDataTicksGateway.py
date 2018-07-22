@@ -296,7 +296,7 @@ class DyStockDataTicksGateway(object):
         self._eventEngine.register(DyEventType.updateHistTicksDataSource, self._updateHistTicksDataSourceHandler, self._hand)
 
     def _updateHistTicksDataSourceHandler(self, event):
-        self._setTicksDataSource(event.data)
+        self._setTicksDataSources(event.data)
 
     def _setTicksDataSources(self, dataSource):
         if dataSource == '新浪':
