@@ -1,5 +1,6 @@
 import datetime
 import random
+import time
 from collections import OrderedDict
 
 import pandas as pd
@@ -91,29 +92,41 @@ class DyStockDataTdx:
         return 1 if code[-2:] == 'SH' else 0
 
     def _adjustApis(self, api):
+        """
+            @return: True - New tdx api established successfully
+        """
         if not self._apis:
-            return
+            return False
 
         if api not in self._apis:
-            return
+            return False
 
         if api.errorCount < self.maxApiErrorCount:
-            return
+            return False
 
         # We think this API isn't stable or connection is closed.
         # So we try ping it again.
         self._closeTdxApi(api.tdxApi) # close firstly
+        time.sleep(1)
         tdxApi, latency = self._ping(api.ip, api.port)
         if tdxApi is None:
             self._apis.remove(api)
-            return
+            return False
 
         # new one
         api.tdxApi = tdxApi
-        api.latency = latency
+        api.latency = latency # just reassign, actually no use
         api.errorCount = 0
 
-        self._apis.sort(key=lambda e: e.latency)
+        # We don't sort. 
+        # Assume one condition that all connections are closed by server and this latency is big,
+        # so this API will be moved close to end.
+        # Because there're about 30+ APIs, after these APIs tried failed, time elapsed too much,
+        # which brings this API closed by server again.
+        # So there might be continuous loop in connection again.
+        #self._apis.sort(key=lambda e: e.latency)
+
+        return True
 
     def _ping(self, ip, port=7709):
         print('TDX{}: Start connecting to {}:{}...'.format(self._tdxNo, ip, port))
@@ -224,29 +237,29 @@ class DyStockDataTdx:
         return newChunks
 
     def _getTicksOneChunkByApi(self, api, code, date, offset, retry=3):
-        chunk = None
-        for _ in range(retry):
-            try:
-                chunk = api.tdxApi.get_history_transaction_data(
-                                                        self._getMarketCode(code),
-                                                        code[:-3],
-                                                        offset*self.ticksBatchSize,
-                                                        self.ticksBatchSize,
-                                                        int(date.replace('-', ''))
-                                                        )
-            except Exception as ex:
-                api.errorCount += 1
-                print('TDX{}: Exception happended when getting ticks[{}, {}] from {}:{}'.format(self._tdxNo, code, date, api.ip, api.port))
+        loop = True
+        while loop:
+            for _ in range(retry):
+                try:
+                    chunk = api.tdxApi.get_history_transaction_data(
+                                                            self._getMarketCode(code),
+                                                            code[:-3],
+                                                            offset*self.ticksBatchSize,
+                                                            self.ticksBatchSize,
+                                                            int(date.replace('-', ''))
+                                                            )
+                except Exception as ex:
+                    api.errorCount += 1
+                    print('TDX{}: Exception happended when getting ticks[{}, {}] from {}:{}, {}'.format(self._tdxNo, code, date, api.ip, api.port, ex))
 
-            else: # successful
-                api.errorCount = 0 # reset
-                break
+                else: # successful
+                    api.errorCount = 0 # reset
+                    return chunk
+            else: # error
+                print('TDX{}: {} retries of getting ticks[{}, {}] failed from {}:{}'.format(self._tdxNo, retry, code, date, api.ip, api.port))
+                loop = self._adjustApis(api)
 
-        else: # error
-            print('TDX{}: {} retries of getting ticks[{}, {}] failed from {}:{}'.format(self._tdxNo, retry, code, date, api.ip, api.port))
-            self._adjustApis(api)
-
-        return chunk
+        return None
 
     def _closeTdxApi(self, tdxApi):
         try:
