@@ -38,13 +38,15 @@ class DyStockDataWind(object):
         # 添加'volume'，由此判断停牌是否
         fields_ = ','.join(fields) if 'volume' in fields else ','.join(fields + ['volume'])
 
-        for _ in range(3):
+        tries = 4
+        for i in range(1, tries+1):
             windData = self._gateway.wsd(code, fields_, startDate, endDate)
 
             if windData.ErrorCode != 0:
                 errorStr = "从Wind获取{0}:{1}, [{2}, {3}]WSD错误: {4}".format(code, name, startDate, endDate, windData.Data[0][0])
-                if 'Timeout' in errorStr:
-                    sleep(1)
+                if 'Timeout' in errorStr and i < tries:
+                    print(errorStr)
+                    sleep(i)
                     continue
             break
 
