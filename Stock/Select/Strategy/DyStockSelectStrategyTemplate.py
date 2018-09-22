@@ -3,6 +3,7 @@ from datetime import datetime
 import operator
 import json
 import numpy as np
+import pandas as pd
 from collections import OrderedDict
 
 
@@ -218,7 +219,9 @@ class DyStockSelectStrategyTemplate(object):
             data = daysEngine.getDataFrame(code)
 
             # get close at @baseDay
-            close = data.ix[baseTDay]['close']
+            close = data.ix[baseTDay, 'close']
+            if type(close) is pd.Series:
+                close = close[0]
 
             # get max price in @nDays
             highest = data.ix[startTDay:endTDay]['high'].max()
@@ -250,6 +253,10 @@ class DyStockSelectStrategyTemplate(object):
         except Exception as ex:
             marketValue = np.nan
 
+        # very strange, seems like Pandas bug.      2018.9.22
+        if type(marketValue) is pd.Series:
+            marketValue = marketValue[0]
+
         return None if np.isnan(marketValue) else marketValue
 
     def __stockMeanIncrease(self, code, daysEngine):
@@ -260,6 +267,8 @@ class DyStockSelectStrategyTemplate(object):
 
             # get close at @baseTDay
             close = df.ix[baseTDay, 'close']
+            if type(close) is pd.Series:
+                close = close[0]
 
             # get mean price in @nDays
             volume = df['volume'][startTDay:endTDay].sum()
@@ -281,6 +290,8 @@ class DyStockSelectStrategyTemplate(object):
 
             # get close at @baseTDay
             close = df.ix[baseTDay, 'close']
+            if type(close) is pd.Series:
+                close = close[0]
 
             # get mean index in @nDays
             mean = df[['open', 'high', 'low', 'close']][startTDay:endTDay].mean().mean()
@@ -328,10 +339,14 @@ class DyStockSelectStrategyTemplate(object):
 
             # get close at @baseTDay
             close = df.ix[baseDay, 'close']
+            if type(close) is pd.Series:
+                close = close[0]
 
             # previous close
             baseDayPos = df.index.get_loc(baseDay)
             preClose = df.ix[baseDayPos - 1, 'close']
+            if type(preClose) is pd.Series:
+                preClose = preClose[0]
 
             increase = (close - preClose)*100/preClose
 
@@ -360,6 +375,10 @@ class DyStockSelectStrategyTemplate(object):
             except Exception as ex:
                 price = np.nan
 
+        # very strange, seems like Pandas bug.      2018.9.22
+        if type(price) is pd.Series:
+            price = price[0]
+
         return None if np.isnan(price) else price
 
     def __indexCurIncrease(self, code, daysEngine):
@@ -372,10 +391,14 @@ class DyStockSelectStrategyTemplate(object):
 
             # get close at @baseTDay
             close = df.ix[baseDay, 'close']
+            if type(close) is pd.Series:
+                close = close[0]
 
             # previous close
             preDay = daysEngine.tDaysOffset(baseDay, -1)
             preClose = df.ix[preDay, 'close']
+            if type(preClose) is pd.Series:
+                preClose = preClose[0]
 
             increase = (close - preClose)*100/preClose
         except Exception as ex:
@@ -394,9 +417,13 @@ class DyStockSelectStrategyTemplate(object):
 
             # get close at @baseTDay
             close = df.ix[baseTDay, 'close']
+            if type(close) is pd.Series:
+                close = close[0]
 
             # get close after @nDays
             nDaysClose = df.ix[endTDay, 'close']
+            if type(nDaysClose) is pd.Series:
+                nDaysClose = nDaysClose[0]
 
             increase = (nDaysClose - close)*100/close
         except Exception as ex:
@@ -414,9 +441,13 @@ class DyStockSelectStrategyTemplate(object):
 
             # get close at @baseTDay
             close = df.ix[baseTDay, 'close']
+            if type(close) is pd.Series:
+                close = close[0]
 
             # get close after @nDays
             nDaysClose = df.ix[endTDay, 'close']
+            if type(nDaysClose) is pd.Series:
+                nDaysClose = nDaysClose[0]
 
             increase = (nDaysClose - close)*100/close
         except Exception as ex:
