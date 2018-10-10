@@ -36,7 +36,7 @@ class ThsTrader(UiTrader):
 
     heartBeatTimer = 0 # no heart beat
 
-    curEntrustHeaderNoIndex = 11
+    curEntrustHeaderNoIndex = 10
     curEntrustHeaderStateIndex = 4
 
 
