@@ -127,18 +127,18 @@ class ThsTrader(UiTrader):
         # positions
         marketValue = 0 # 账户市值
         for pos in self._positions:
-            code = DyStockCommon.getDyStockCode(pos[0])
+            code = DyStockCommon.getDyStockCode(pos[1])
             tick = ticks.get(code)
             if tick is None:
-                self._info.print('同花顺: 无法获取{0}({1})的Tick数据'.format(code, pos[1]), DyLogData.warning)
-                marketValue += float(pos[9])
+                self._info.print('同花顺: 无法获取{}({})的Tick数据'.format(code, pos[2]), DyLogData.warning)
+                marketValue += float(pos[10])
                 continue
 
-            pos[9] = tick.price*float(pos[2]) # 市值
-            pos[11] = tick.price # 最新价格
-            pos[7] = (tick.price - float(pos[-4]))*float(pos[2]) # 浮动盈亏
+            pos[10] = tick.price*float(pos[3]) # 市值
+            pos[9] = tick.price # 最新价格
+            pos[6] = (tick.price - float(pos[7]))*float(pos[3]) # 浮动盈亏
 
-            marketValue += pos[9]
+            marketValue += pos[10]
 
         # balance
         if self._positions:
@@ -146,7 +146,7 @@ class ThsTrader(UiTrader):
 
             marketValueDelta = marketValue - float(balance[-2])
             balance[-2] = marketValue
-            balance[-1] = float(balance[-1]) + marketValueDelta
+            balance[2] = float(balance[2]) + marketValueDelta
 
     def refresh(self):
         self._uiClient.refresh()
