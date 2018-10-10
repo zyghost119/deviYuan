@@ -36,11 +36,17 @@ DevilYuan股票量化系统由python编写，支持python3.4及以上版本，�
 - 安装[MongoDB](https://www.mongodb.com/download-center#production)，并将[MongoDB配置为系统服务](https://docs.mongodb.com/manual/tutorial/install-mongodb-on-windows/#configure-a-windows-service-for-mongodb-community-edition)
     -  如果你想下载更多的个股历史分笔数据，建议配备比较大的的硬盘。毛估估，现在一年的全市场个股分笔数据可能有80G左右。
     -  [MogonDB客户端](https://robomongo.org/download)
--  实盘交易现在支持的是银河证券，由于官网最新版可能做了防程序控制界面，请到[这儿](https://github.com/moyuanz/Box/blob/master/BinaryStar3.2.exe)安装PC客户端
-    - 银河证券的客户端需要做如下配置，不然会导致下单时价格出错以及客户端超时锁定
-        - 系统设置 > 界面设置: 界面不操作超时时间设为 0
-        - 系统设置 > 交易设置: 默认买入价格/买入数量/卖出价格/卖出数量 都设置为 空
-        - 同时客户端不能最小化也不能处于精简模式
+-  实盘交易
+    - 银河证券，由于官网最新版可能做了防程序控制界面，请到[这儿](https://github.com/moyuanz/Box/blob/master/BinaryStar3.2.exe)安装PC客户端
+        - 银河证券的客户端需要做如下配置，不然会导致下单时价格出错以及客户端超时锁定
+            - 系统设置 > 界面设置: 界面不操作超时时间设为 0
+            - 系统设置 > 交易设置: 默认买入价格/买入数量/卖出价格/卖出数量 都设置为 空
+            - 同时客户端不能最小化也不能处于精简模式
+    - 同花顺，由于官网最新版可能做了防程序控制界面，请到[这儿](https://github.com/shidenggui/easytrader/issues/272)安装通用版同花顺
+        - 同花顺的xiadan客户端需要做如下配置，不然会导致下单时价格出错以及客户端超时锁定
+            - 系统设置 > 界面设置: 界面不操作超时时间设为 0
+            - 系统设置 > 交易设置: 默认买入价格/买入数量/卖出价格/卖出数量 都设置为 空
+            - 同时客户端不能最小化也不能处于精简模式
 - 安装[Wind个人免费Python接口](http://dajiangzhang.com/document) **(可选)**
     - 若不安装Wind接口，股票代码表，交易日数据和历史日线数据将使用TuShare接口。TuShare这一块的数据更新速度比较慢。并且Wind的复权因子数据比较准确，建议安装Wind。但Wind的接口对数据流量有限制。
 - 到[Server酱](http://sc.ftqq.com/3.version)注册一个SCKEY，这样实盘时的信号可以微信铃声通知 **(可选)**
