@@ -8,7 +8,7 @@ class DyST_BankIntraDaySpread(DyStockCtaTemplate):
 
     backTestingMode = 'bar1m'
 
-    broker = 'yh'
+    broker = 'ths'
 
     # 策略实盘参数
     codes = ['601988.SH', '601288.SH', '601398.SH', '601939.SH']

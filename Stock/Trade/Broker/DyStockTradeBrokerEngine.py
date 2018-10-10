@@ -1,6 +1,7 @@
 from EventEngine.DyEvent import *
 from ..DyStockTradeCommon import *
 from .YhNew.YhTrader import YhTrader
+from .Ths.ThsTrader import ThsTrader
 from .Simu.SimuTrader import *
 
 
@@ -9,6 +10,7 @@ class DyStockTradeBrokerEngine(object):
 
     traderMap = {
                  'yh': YhTrader,
+                 'ths': ThsTrader,
 
                  'simu1': SimuTrader1,
                  'simu2': SimuTrader2,

@@ -23,6 +23,10 @@ class DyStockAccountConfigDlg(QDialog):
         labelPassword = QLabel('密码')
         self._lineEditAccountThs = QLineEdit(self._data["Ths"]["Account"])
         self._lineEditPasswordThs = QLineEdit(self._data["Ths"]["Password"])
+        labelAccount.setEnabled(False)
+        labelPassword.setEnabled(False)
+        self._lineEditAccountThs.setEnabled(False)
+        self._lineEditPasswordThs.setEnabled(False)
 
         labelExe = QLabel('同花顺下单可执行文件路径                                                                             ')
         self._lineEditExeThs = QLineEdit(self._data["Ths"]["Exe"])

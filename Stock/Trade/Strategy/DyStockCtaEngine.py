@@ -14,6 +14,7 @@ from ..Market.DyStockMarketFilter import *
 from ..AccountManager.Broker.DyStockGtjaAccountManager import *
 from ..AccountManager.Broker.DyStockYhAccountManager import *
 from ..AccountManager.Broker.DyStockSimuAccountManager import *
+from ..AccountManager.Broker.DyStockThsAccountManager import *
 
 
 class DyStockCtaEngine(object):
@@ -25,6 +26,8 @@ class DyStockCtaEngine(object):
 
     accountManagerMap = {
                          'yh': DyStockYhAccountManager,
+                         'ths': DyStockThsAccountManager,
+
                          'simu1': DyStockSimuAccountManager1,
                          'simu2': DyStockSimuAccountManager2,
                          'simu3': DyStockSimuAccountManager3,

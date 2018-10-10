@@ -52,7 +52,9 @@ class DyStockCommon(object):
 
     # Devil启动时从配置文件读入，这个配置在Stock模块里共享。默认是Wind
     defaultHistDaysDataSource = ['Wind'] # Wind and TuShare，如果数据源是两个或者以上，则数据相互做验证。单个则不做验证。这里包括验证交易日数据，股票代码表和日线数据。
-    WindPyInstalled = True    
+    WindPyInstalled = True
+    useTuSharePro = False
+    tuShareProToken = None 
 
     # 同花顺个股资料（F10）link
     jqkaStockF10Link = 'http://basic.10jqka.com.cn/{}/'

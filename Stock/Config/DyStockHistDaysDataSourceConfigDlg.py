@@ -1,7 +1,7 @@
 import json
 from collections import OrderedDict
 
-from PyQt5.QtWidgets import QDialog, QLabel, QCheckBox, QTextEdit, QPushButton, QGridLayout, QComboBox, QLineEdit
+from PyQt5.QtWidgets import QDialog, QLabel, QCheckBox, QTextEdit, QPushButton, QGridLayout, QComboBox, QLineEdit, QApplication
 
 from DyCommon.DyCommon import DyCommon
 from Stock.Common.DyStockCommon import DyStockCommon
@@ -33,6 +33,10 @@ class DyStockHistDaysDataSourceConfigDlg(QDialog):
 
         self._tuShareCheckBox = QCheckBox('TuShare')
         self._tuShareCheckBox.clicked.connect(self._tuShareCheckBoxClicked)
+
+        self._tuShareProCheckBox = QCheckBox('TuSharePro')
+        self._tuShareProTokenLabel = QLabel('TuSharePro token')
+        self._tuShareProTokenLineEdit = QLineEdit()
 
         description = """默认使用Wind
 
@@ -68,16 +72,20 @@ class DyStockHistDaysDataSourceConfigDlg(QDialog):
         grid.addWidget(label, 0, 0)
         grid.addWidget(self._windCheckBox, 1, 0)
         grid.addWidget(self._tuShareCheckBox, 2, 0)
-        grid.addWidget(textEdit, 3, 0)
+        grid.addWidget(self._tuShareProCheckBox, 3, 0)
+        grid.addWidget(self._tuShareProTokenLabel, 4, 0)
+        grid.addWidget(self._tuShareProTokenLineEdit, 5, 0)
 
-        grid.addWidget(QLabel("                                                                 "), 4, 0)
-        grid.addWidget(QLabel("交易日数据模式"), 5, 0)
-        grid.addWidget(self._tradeDaysComboBox, 6, 0)
-        grid.addWidget(tradeDaysTextEdit, 7, 0)
+        grid.addWidget(textEdit, 6, 0)
 
-        grid.addWidget(QLabel("                                                                 "), 8, 0)
-        grid.addWidget(QLabel("TuShare日线数据下载间隔时间(秒)"), 9, 0)
-        grid.addWidget(self._tuShareDaysIntervalLineEdit, 10, 0)
+        grid.addWidget(QLabel("                                                                 "), 7, 0)
+        grid.addWidget(QLabel("交易日数据模式"), 8, 0)
+        grid.addWidget(self._tradeDaysComboBox, 9, 0)
+        grid.addWidget(tradeDaysTextEdit, 10, 0)
+
+        grid.addWidget(QLabel("                                                                 "), 11, 0)
+        grid.addWidget(QLabel("TuShare日线数据下载间隔时间(秒)"), 12, 0)
+        grid.addWidget(self._tuShareDaysIntervalLineEdit, 13, 0)
 
         grid.addWidget(okPushButton, 0, 1)
         grid.addWidget(cancelPushButton, 1, 1)
@@ -88,8 +96,21 @@ class DyStockHistDaysDataSourceConfigDlg(QDialog):
         if self._data.get('Wind'):
             self._windCheckBox.setChecked(True)
 
+        enableTuSharePro = False
         if self._data.get('TuShare'):
             self._tuShareCheckBox.setChecked(True)
+            enableTuSharePro = True
+
+        self._tuShareProCheckBox.setEnabled(enableTuSharePro)
+        self._tuShareProTokenLabel.setEnabled(enableTuSharePro)
+        self._tuShareProTokenLineEdit.setEnabled(enableTuSharePro)
+
+        # set tushare pro
+        if self._tuShareProData.get('TuSharePro'):
+            self._tuShareProCheckBox.setChecked(True)
+
+        if self._tuShareProData.get('Token'):
+            self._tuShareProTokenLineEdit.setText(self._tuShareProData.get('Token'))
 
         # set according to days source checkbox
         self._tradeDaysComboBox.addItems(list(self.tradeDaysMode))
@@ -102,6 +123,8 @@ class DyStockHistDaysDataSourceConfigDlg(QDialog):
 
         # tushare days downloading interval
         self._tuShareDaysIntervalLineEdit.setText(str(self._tuShareDaysIntervalData['interval']))
+
+        self.resize(QApplication.desktop().size().width()//2, QApplication.desktop().size().height()//4*3)
         
     def _read(self):
         # data source
@@ -112,6 +135,15 @@ class DyStockHistDaysDataSourceConfigDlg(QDialog):
                 self._data = json.load(f)
         except:
             self._data = DyStockConfig.getDefaultHistDaysDataSource()
+
+        # tushare pro
+        file = DyStockConfig.getStockHistDaysTuShareProFileName()
+
+        try:
+            with open(file) as f:
+                self._tuShareProData = json.load(f)
+        except:
+            self._tuShareProData = DyStockConfig.getDefaultHistDaysTuSharePro()
 
         # trade days mode
         file = DyStockConfig.getStockTradeDaysModeFileName()
@@ -145,6 +177,19 @@ class DyStockHistDaysDataSourceConfigDlg(QDialog):
 
         # save config
         file = DyStockConfig.getStockHistDaysDataSourceFileName()
+        with open(file, 'w') as f:
+            f.write(json.dumps(data, indent=4))
+
+        # tushare pro
+        data = {'TuSharePro': False, 'Token': None}
+        if self._tuShareProCheckBox.isChecked():
+            data['TuSharePro'] = True
+
+        data['Token'] = self._tuShareProTokenLineEdit.text()
+
+        DyStockConfig.configStockHistDaysTuSharePro(data)
+
+        file = DyStockConfig.getStockHistDaysTuShareProFileName()
         with open(file, 'w') as f:
             f.write(json.dumps(data, indent=4))
 
@@ -197,3 +242,8 @@ class DyStockHistDaysDataSourceConfigDlg(QDialog):
 
     def _tuShareCheckBoxClicked(self):
         self._checkBoxClicked()
+
+        enable = self._tuShareCheckBox.isChecked()
+        self._tuShareProCheckBox.setEnabled(enable)
+        self._tuShareProTokenLabel.setEnabled(enable)
+        self._tuShareProTokenLineEdit.setEnabled(enable)

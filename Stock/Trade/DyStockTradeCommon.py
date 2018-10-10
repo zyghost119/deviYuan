@@ -41,6 +41,8 @@ class DyStockTradeCommon:
     accountMap = {'gtja': '国泰居安',
                   'yh': '银河证券',
                   'fz': '方正证券',
+                  'ths': '同花顺',
+
                   'simu1': '模拟1',
                   'simu2': '模拟2',
                   'simu3': '模拟3',

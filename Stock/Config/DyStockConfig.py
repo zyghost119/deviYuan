@@ -6,6 +6,7 @@ from Stock.Common.DyStockCommon import DyStockCommon
 from ..Data.Engine.DyStockMongoDbEngine import DyStockMongoDbEngine
 from ..Trade.WeChat.DyStockTradeWxEngine import DyStockTradeWxEngine
 from ..Trade.Broker.YhNew.YhTrader import YhTrader
+from ..Trade.Broker.Ths.ThsTrader import ThsTrader
 from ..Data.Gateway.DyStockDataGateway import DyStockDataGateway
 
 
@@ -74,6 +75,36 @@ class DyStockConfig(object):
         file = os.path.join(path, 'DyStockHistDaysDataSource.json')
 
         return file
+
+    def _configStockHistDaysTuSharePro():
+        file = DyStockConfig.getStockHistDaysTuShareProFileName()
+
+        # open
+        try:
+            with open(file) as f:
+                data = json.load(f)
+        except:
+            data = DyStockConfig.getDefaultHistDaysTuSharePro()
+
+        DyStockConfig.configStockHistDaysTuSharePro(data)
+
+    def configStockHistDaysTuSharePro(data):
+        DyStockCommon.useTuSharePro = False
+        DyStockCommon.tuShareProToken = None
+
+        if data.get('TuSharePro'):
+            DyStockCommon.useTuSharePro = True
+
+        DyStockCommon.tuShareProToken = data.get('Token')
+
+    def getStockHistDaysTuShareProFileName():
+        path = DyCommon.createPath('Stock/User/Config/Common')
+        file = os.path.join(path, 'DyStockHistDaysTuSharePro.json')
+
+        return file
+
+    def getDefaultHistDaysTuSharePro():
+        return {'TuSharePro': False}
 
     def _configStockMongoDb():
         file = DyStockConfig.getStockMongoDbFileName()
@@ -152,6 +183,8 @@ class DyStockConfig(object):
         YhTrader.password = data["Yh"]["Password"]
         YhTrader.exePath = data["Yh"]["Exe"]
 
+        ThsTrader.exePath = data["Ths"]["Exe"]
+
     def getStockAccountFileName():
         path = DyCommon.createPath('Stock/User/Config/Trade')
         file = os.path.join(path, 'DyStockAccount.json')
@@ -201,7 +234,8 @@ class DyStockConfig(object):
         return file
 
     def config():
-        DyStockConfig._configStockHistDaysDataSource()
+        DyStockConfig._configStockHistDaysDataSource() # first
+        DyStockConfig._configStockHistDaysTuSharePro()
         DyStockConfig._configStockTradeDaysMode()
         DyStockConfig._configStockTuShareDaysInterval()
         DyStockConfig._configStockMongoDb()
