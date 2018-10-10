@@ -70,7 +70,7 @@ class Copy(BaseStrategy):
                 return pywinauto.clipboard.GetData()
             # pylint: disable=broad-except
             except Exception as e:
-                log.warning("%s, retry ......", e)
+                print("{}, retry ......".format(e))
 
 
 class CommonConfig:
