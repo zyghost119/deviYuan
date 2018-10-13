@@ -35,6 +35,8 @@ class DyStockHistDaysDataSourceConfigDlg(QDialog):
         self._tuShareCheckBox.clicked.connect(self._tuShareCheckBoxClicked)
 
         self._tuShareProCheckBox = QCheckBox('TuSharePro')
+        self._tuShareProCheckBox.clicked.connect(self._tuShareProCheckBoxClicked)
+
         self._tuShareProTokenLabel = QLabel('TuSharePro token')
         self._tuShareProTokenLineEdit = QLineEdit()
 
@@ -102,12 +104,15 @@ class DyStockHistDaysDataSourceConfigDlg(QDialog):
             enableTuSharePro = True
 
         self._tuShareProCheckBox.setEnabled(enableTuSharePro)
-        self._tuShareProTokenLabel.setEnabled(enableTuSharePro)
-        self._tuShareProTokenLineEdit.setEnabled(enableTuSharePro)
 
         # set tushare pro
+        enableTushareProToken = False
         if self._tuShareProData.get('TuSharePro'):
             self._tuShareProCheckBox.setChecked(True)
+            enableTushareProToken = True
+
+        self._tuShareProTokenLabel.setEnabled(enableTuSharePro and enableTushareProToken)
+        self._tuShareProTokenLineEdit.setEnabled(enableTuSharePro and enableTushareProToken)
 
         if self._tuShareProData.get('Token'):
             self._tuShareProTokenLineEdit.setText(self._tuShareProData.get('Token'))
@@ -245,5 +250,13 @@ class DyStockHistDaysDataSourceConfigDlg(QDialog):
 
         enable = self._tuShareCheckBox.isChecked()
         self._tuShareProCheckBox.setEnabled(enable)
+
+        enableToken = self._tuShareProCheckBox.isChecked()
+        self._tuShareProTokenLabel.setEnabled(enable and enableToken)
+        self._tuShareProTokenLineEdit.setEnabled(enable and enableToken)
+
+    def _tuShareProCheckBoxClicked(self):
+        enable = self._tuShareProCheckBox.isChecked()
+
         self._tuShareProTokenLabel.setEnabled(enable)
         self._tuShareProTokenLineEdit.setEnabled(enable)

@@ -43,6 +43,8 @@ class DyStockDataGateway(object):
         else:
             self._wind = None
 
+        self._tuSharePro = None
+
         if registerEvent:
             self._registerEvent()
 
@@ -162,9 +164,12 @@ class DyStockDataGateway(object):
             windDf = self._wind.getDays(code, startDate, endDate, fields, name)
             df = windDf
 
-        # get from TuShare
+        # get from TuShare or TuSharePro
         if 'TuShare' in DyStockCommon.defaultHistDaysDataSource:
-            tuShareDf = self._getDaysFromTuShare(code, startDate, endDate, fields, name)
+            if DyStockCommon.useTuSharePro and DyStockCommon.tuShareProToken:
+                tuShareDf = self._getDaysFromTuSharePro(code, startDate, endDate, fields, name)
+            else:
+                tuShareDf = self._getDaysFromTuShare(code, startDate, endDate, fields, name)
             df = tuShareDf
 
         # verify data
@@ -505,3 +510,128 @@ class DyStockDataGateway(object):
             return self._getFundDaysFromTuShare(code, startDate, endDate, fields, name)
 
         return self._getCodeDaysFromTuShare(code, startDate, endDate, fields, name)
+
+    def _getDaysFromTuSharePro(self, code, startDate, endDate, fields, name=None):
+        """
+            从tusharepro获取股票日线数据（含指数和基金（ETF））。
+            !!!TuShare没有提供换手率和复权因子，所以只能假设。
+            策略针对ETF的，需要注意。
+            保持跟Wind接口一致，由于没法从网上获取净流入量和金额，所以这两个字段没有。
+            策略角度看，其实这两个字段也没什么用。
+            TuSharePro暂时没有提供ETF的数据。
+            @return: df['datetime', indicators]
+                     None - errors
+                     [] - no data
+        """
+        if code in DyStockCommon.indexes:
+            return self._getIndexDaysFromTuSharePro(code, startDate, endDate, fields, name)
+        
+        if code in DyStockCommon.funds:
+            return self._getFundDaysFromTuSharePro(code, startDate, endDate, fields, name)
+
+        return self._getCodeDaysFromTuSharePro(code, startDate, endDate, fields, name)
+
+    def _startTuSharePro(self):
+        if self._tuSharePro is None:
+            ts.set_token(DyStockCommon.tuShareProToken)
+            self._tuSharePro = ts.pro_api()
+
+    def _getCodeDaysFromTuSharePro(self, code, startDate, endDate, fields, name=None):
+        """
+            从TuSharePro获取个股日线数据
+        """
+        self._startTuSharePro()
+
+        print("TuSharePro: {}, {} ~ {}".format(code, startDate, endDate))
+
+        proStartDate = startDate.replace('-', '')
+        proEndDate = endDate.replace('-', '')
+
+        try:
+            # ohlcv, amount
+            dailyDf = self._tuSharePro.daily(ts_code=code, start_date=proStartDate, end_date=proEndDate)
+            dailyDf = dailyDf.set_index('trade_date')
+            dailyDf = dailyDf[['open', 'high', 'low', 'close', 'vol', 'amount']]
+            dailyDf['vol'] *= 100
+            dailyDf['amount'] *=1000
+            dailyDf.index = pd.to_datetime(dailyDf.index, format='%Y%m%d')
+
+            # adj factor
+            adjFactorDf = self._tuSharePro.adj_factor(ts_code=code, start_date=proStartDate, end_date=proEndDate)
+            adjFactorDf = adjFactorDf.set_index('trade_date')
+            adjFactorDf = adjFactorDf[['adj_factor']]
+            adjFactorDf.index = pd.to_datetime(adjFactorDf.index, format='%Y%m%d')
+
+            # turn
+            dailyBasicDf = self._tuSharePro.daily_basic(ts_code=code, start_date=proStartDate, end_date=proEndDate)
+            dailyBasicDf = dailyBasicDf.set_index('trade_date')
+            dailyBasicDf = dailyBasicDf[['turnover_rate']]
+            dailyBasicDf = dailyBasicDf.dropna()
+            dailyBasicDf.index = pd.to_datetime(dailyBasicDf.index, format='%Y%m%d')
+        except Exception as ex:
+            self._info.print("{}({})TuSharePro异常[{}, {}]: {}".format(code, name, startDate, endDate, ex), DyLogData.error)
+            return None
+
+        df = pd.concat([dailyDf, dailyBasicDf, adjFactorDf], axis=1)
+        if df.isnull().sum().sum() > 0:
+            self._info.print("{}({})TuSharePro有些数据缺失[{}, {}]".format(code, name, startDate, endDate), DyLogData.warning)
+            return None
+
+        # change to Wind's indicators
+        df = df.sort_index()
+        df.index.name = 'datetime'
+        df.reset_index(inplace=True) # 把时间索引转成列
+        df.rename(columns={'amount': 'amt', 'turnover_rate': 'turn', 'adj_factor': 'adjfactor', 'vol': 'volume'}, inplace=True)
+
+        # select according @fields
+        df = df[['datetime'] + fields]
+
+        return df
+
+    def _getIndexDaysFromTuSharePro(self, code, startDate, endDate, fields, name=None):
+        """
+            从TuSharePro获取指数日线数据
+        """
+        self._startTuSharePro()
+
+        print("TuSharePro: {}, {} ~ {}".format(code, startDate, endDate))
+
+        proStartDate = startDate.replace('-', '')
+        proEndDate = endDate.replace('-', '')
+
+        try:
+            # ohlcv, amount
+            dailyDf = self._tuSharePro.index_daily(ts_code=code, start_date=proStartDate, end_date=proEndDate)
+            dailyDf = dailyDf.set_index('trade_date')
+            dailyDf = dailyDf[['open', 'high', 'low', 'close', 'vol', 'amount']]
+            dailyDf['vol'] *= 100
+            dailyDf['amount'] *=1000
+            dailyDf.index = pd.to_datetime(dailyDf.index, format='%Y%m%d')
+        except Exception as ex:
+            self._info.print("{}({})TuSharePro异常[{}, {}]: {}".format(code, name, startDate, endDate, ex), DyLogData.error)
+            return None
+
+        df = dailyDf
+        if df.isnull().sum().sum() > 0:
+            self._info.print("{}({})TuSharePro有些数据缺失[{}, {}]".format(code, name, startDate, endDate), DyLogData.warning)
+            return None
+
+        # no turn and factor for index
+        df['turnover_rate'] = 0
+        df['adj_factor'] = 1
+
+        # change to Wind's indicators
+        df = df.sort_index()
+        df.index.name = 'datetime'
+        df.reset_index(inplace=True) # 把时间索引转成列
+        df.rename(columns={'amount': 'amt', 'turnover_rate': 'turn', 'adj_factor': 'adjfactor', 'vol': 'volume'}, inplace=True)
+
+        # select according @fields
+        df = df[['datetime'] + fields]
+
+        return df
+
+    def _getFundDaysFromTuSharePro(self, code, startDate, endDate, fields, name=None):
+        self._startTuSharePro()
+
+        return self._getFundDaysFromTuShare(code, startDate, endDate, fields, name)
