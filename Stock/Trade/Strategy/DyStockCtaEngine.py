@@ -1285,6 +1285,11 @@ class DyStockCtaBarAggFast:
         bar.low = tick.price
         bar.close = tick.price
 
+        # 今日数据
+        bar.curOpen = tick.open
+        bar.curHigh = tick.high
+        bar.curLow = tick.low
+
         bar.preClose = tick.preClose
 
         bar.date = refTick.date
