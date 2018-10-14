@@ -1362,6 +1362,9 @@ class DyStockCtaBarAggFast:
                 bar.low = min(tick.price, bar.low)
                 bar.close = tick.price
 
+                bar.curHigh = max(tick.high, bar.curHigh)
+                bar.curLow = min(tick.low, bar.curLow)
+
                 if preTick is None:
                     if refTick.time < '09:30:00':
                         preVolume = 0
