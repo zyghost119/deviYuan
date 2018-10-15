@@ -4,7 +4,7 @@
 import os
 import sys
 import traceback
-import webbrowser
+import PIL
 import pyqrcode
 import requests
 import mimetypes
@@ -44,7 +44,8 @@ def show_image(file_path):
         command = "open -a /Applications/Preview.app %s&" % quote(file_path)
         os.system(command)
     else:
-        webbrowser.open(os.path.join(os.getcwd(),'temp',file_path))
+        img = PIL.Image.open(file_path)
+        img.show()
 
 
 class SafeSession(requests.Session):
