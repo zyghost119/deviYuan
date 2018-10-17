@@ -10,7 +10,7 @@ DevilYuan股票量化系统由python编写，支持python3.4及以上版本，�
     - 实盘交易
 - 历史数据均免费来自于网络
     - Wind免费个人接口
-    - TuShare
+    - TuShare(TuSharePro)
     - 通达信
 - 实盘微信提醒及交互
 - 一键挂机
