@@ -576,6 +576,9 @@ class DyStockDataGateway(object):
 
         df = pd.concat([dailyDf, dailyBasicDf, adjFactorDf], axis=1)
         if df.isnull().sum().sum() > 0:
+            print("{}({})TuSharePro有些数据缺失[{}, {}]".format(code, name, startDate, endDate))
+            print(df[df.isnull().any(axis=1)])
+
             self._info.print("{}({})TuSharePro有些数据缺失[{}, {}]".format(code, name, startDate, endDate), DyLogData.warning)
             return None
 
