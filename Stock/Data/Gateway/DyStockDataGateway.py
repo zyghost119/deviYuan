@@ -552,6 +552,7 @@ class DyStockDataGateway(object):
             dailyDf = self._tuSharePro.daily(ts_code=code, start_date=proStartDate, end_date=proEndDate)
             dailyDf = dailyDf.set_index('trade_date')
             dailyDf = dailyDf[['open', 'high', 'low', 'close', 'vol', 'amount']]
+            dailyDf = dailyDf.dropna()
             dailyDf['vol'] *= 100
             dailyDf['amount'] *=1000
             dailyDf.index = pd.to_datetime(dailyDf.index, format='%Y%m%d')
@@ -560,6 +561,7 @@ class DyStockDataGateway(object):
             adjFactorDf = self._tuSharePro.adj_factor(ts_code=code, start_date=proStartDate, end_date=proEndDate)
             adjFactorDf = adjFactorDf.set_index('trade_date')
             adjFactorDf = adjFactorDf[['adj_factor']]
+            adjFactorDf = adjFactorDf.dropna()
             adjFactorDf.index = pd.to_datetime(adjFactorDf.index, format='%Y%m%d')
 
             # turn
@@ -604,6 +606,7 @@ class DyStockDataGateway(object):
             dailyDf = self._tuSharePro.index_daily(ts_code=code, start_date=proStartDate, end_date=proEndDate)
             dailyDf = dailyDf.set_index('trade_date')
             dailyDf = dailyDf[['open', 'high', 'low', 'close', 'vol', 'amount']]
+            dailyDf = dailyDf.dropna()
             dailyDf['vol'] *= 100
             dailyDf['amount'] *=1000
             dailyDf.index = pd.to_datetime(dailyDf.index, format='%Y%m%d')
@@ -612,9 +615,6 @@ class DyStockDataGateway(object):
             return None
 
         df = dailyDf
-        if df.isnull().sum().sum() > 0:
-            self._info.print("{}({})TuSharePro有些数据缺失[{}, {}]".format(code, name, startDate, endDate), DyLogData.warning)
-            return None
 
         # no turn and factor for index
         df['turnover_rate'] = 0
