@@ -42,6 +42,8 @@ DevilYuan股票量化系统由python编写，支持python3.4及以上版本，�
             - 系统设置 > 界面设置: 界面不操作超时时间设为 0
             - 系统设置 > 交易设置: 默认买入价格/买入数量/卖出价格/卖出数量 都设置为 空
             - 同时客户端不能最小化也不能处于精简模式
+        - 登录界面设置
+            - ![image](https://github.com/moyuanz/DevilYuan/blob/master/docs/trade/yhLoginUI.jpg)
     - 同花顺，由于官网最新版可能做了防程序控制界面，请到[这儿](https://github.com/shidenggui/easytrader/issues/272)安装通用版同花顺
         - 同花顺的xiadan客户端需要做如下配置，不然会导致下单时价格出错以及客户端超时锁定
             - 系统设置 > 界面设置: 界面不操作超时时间设为 0
