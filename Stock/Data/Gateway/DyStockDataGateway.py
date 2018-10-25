@@ -547,34 +547,45 @@ class DyStockDataGateway(object):
         proStartDate = startDate.replace('-', '')
         proEndDate = endDate.replace('-', '')
 
-        try:
-            # ohlcv, amount
-            dailyDf = self._tuSharePro.daily(ts_code=code, start_date=proStartDate, end_date=proEndDate)
-            dailyDf = dailyDf.set_index('trade_date')
-            dailyDf = dailyDf[['open', 'high', 'low', 'close', 'vol', 'amount']]
-            dailyDf = dailyDf.dropna()
-            dailyDf['vol'] *= 100
-            dailyDf['amount'] *=1000
-            dailyDf.index = pd.to_datetime(dailyDf.index, format='%Y%m%d')
+        lastEx = None
+        retry = 3
+        for _ in range(retry):
+            try:
+                # ohlcv, amount
+                dailyDf = self._tuSharePro.daily(ts_code=code, start_date=proStartDate, end_date=proEndDate)
+                dailyDf = dailyDf.set_index('trade_date')
+                dailyDf = dailyDf[['open', 'high', 'low', 'close', 'vol', 'amount']]
+                dailyDf = dailyDf.dropna()
+                dailyDf['vol'] *= 100
+                dailyDf['amount'] *=1000
+                dailyDf.index = pd.to_datetime(dailyDf.index, format='%Y%m%d')
 
-            # adj factor
-            adjFactorDf = self._tuSharePro.adj_factor(ts_code=code, start_date=proStartDate, end_date=proEndDate)
-            adjFactorDf = adjFactorDf.set_index('trade_date')
-            adjFactorDf = adjFactorDf[['adj_factor']]
-            adjFactorDf = adjFactorDf.dropna()
-            adjFactorDf.index = pd.to_datetime(adjFactorDf.index, format='%Y%m%d')
+                # adj factor
+                adjFactorDf = self._tuSharePro.adj_factor(ts_code=code, start_date=proStartDate, end_date=proEndDate)
+                adjFactorDf = adjFactorDf.set_index('trade_date')
+                adjFactorDf = adjFactorDf[['adj_factor']]
+                adjFactorDf = adjFactorDf.dropna()
+                adjFactorDf.index = pd.to_datetime(adjFactorDf.index, format='%Y%m%d')
 
-            # turn
-            dailyBasicDf = self._tuSharePro.daily_basic(ts_code=code, start_date=proStartDate, end_date=proEndDate)
-            dailyBasicDf = dailyBasicDf.set_index('trade_date')
-            dailyBasicDf = dailyBasicDf[['turnover_rate']]
-            dailyBasicDf = dailyBasicDf.dropna()
-            dailyBasicDf.index = pd.to_datetime(dailyBasicDf.index, format='%Y%m%d')
-        except Exception as ex:
-            self._info.print("{}({})TuSharePro异常[{}, {}]: {}".format(code, name, startDate, endDate, ex), DyLogData.error)
+                # turn
+                dailyBasicDf = self._tuSharePro.daily_basic(ts_code=code, start_date=proStartDate, end_date=proEndDate)
+                dailyBasicDf = dailyBasicDf.set_index('trade_date')
+                dailyBasicDf = dailyBasicDf[['turnover_rate']]
+                dailyBasicDf = dailyBasicDf.dropna()
+                dailyBasicDf.index = pd.to_datetime(dailyBasicDf.index, format='%Y%m%d')
+                break
+            except Exception as ex:
+                lastEx = ex
+                print("{}({})TuSharePro异常[{}, {}]: {}, retrying...".format(code, name, startDate, endDate, ex))
+                sleep(1)
+        else:
+            self._info.print("{}({})TuSharePro异常[{}, {}]: {}, retried {} times".format(code, name, startDate, endDate, lastEx, retry), DyLogData.error)
             return None
 
-        df = pd.concat([dailyDf, dailyBasicDf, adjFactorDf], axis=1)
+        # 清洗数据
+        df = pd.concat([dailyDf, dailyBasicDf], axis=1)
+        df = df[df['vol'] > 0] # 剔除停牌
+        df = df.merge(adjFactorDf, how='left', left_index=True, right_index=True) # 以行情为基准
         if df.isnull().sum().sum() > 0:
             print("{}({})TuSharePro有些数据缺失[{}, {}]".format(code, name, startDate, endDate))
             print(df[df.isnull().any(axis=1)])
@@ -590,7 +601,6 @@ class DyStockDataGateway(object):
 
         # select according @fields
         df = df[['datetime'] + fields]
-
         return df
 
     def _getIndexDaysFromTuSharePro(self, code, startDate, endDate, fields, name=None):
@@ -604,17 +614,25 @@ class DyStockDataGateway(object):
         proStartDate = startDate.replace('-', '')
         proEndDate = endDate.replace('-', '')
 
-        try:
-            # ohlcv, amount
-            dailyDf = self._tuSharePro.index_daily(ts_code=code, start_date=proStartDate, end_date=proEndDate)
-            dailyDf = dailyDf.set_index('trade_date')
-            dailyDf = dailyDf[['open', 'high', 'low', 'close', 'vol', 'amount']]
-            dailyDf = dailyDf.dropna()
-            dailyDf['vol'] *= 100
-            dailyDf['amount'] *=1000
-            dailyDf.index = pd.to_datetime(dailyDf.index, format='%Y%m%d')
-        except Exception as ex:
-            self._info.print("{}({})TuSharePro异常[{}, {}]: {}".format(code, name, startDate, endDate, ex), DyLogData.error)
+        lastEx = None
+        retry = 3
+        for _ in range(retry):
+            try:
+                # ohlcv, amount
+                dailyDf = self._tuSharePro.index_daily(ts_code=code, start_date=proStartDate, end_date=proEndDate)
+                dailyDf = dailyDf.set_index('trade_date')
+                dailyDf = dailyDf[['open', 'high', 'low', 'close', 'vol', 'amount']]
+                dailyDf = dailyDf.dropna()
+                dailyDf['vol'] *= 100
+                dailyDf['amount'] *=1000
+                dailyDf.index = pd.to_datetime(dailyDf.index, format='%Y%m%d')
+                break
+            except Exception as ex:
+                lastEx = ex
+                print("{}({})TuSharePro异常[{}, {}]: {}, retrying...".format(code, name, startDate, endDate, ex))
+                sleep(1)
+        else:
+            self._info.print("{}({})TuSharePro异常[{}, {}]: {}, retried {} times".format(code, name, startDate, endDate, lastEx, retry), DyLogData.error)
             return None
 
         df = dailyDf
@@ -631,7 +649,6 @@ class DyStockDataGateway(object):
 
         # select according @fields
         df = df[['datetime'] + fields]
-
         return df
 
     def _getFundDaysFromTuSharePro(self, code, startDate, endDate, fields, name=None):
