@@ -90,10 +90,11 @@ class DyStockDataDaysEngine(object):
                 return None
         else:
             newCodes = {}
-            for code in codes:
-                newCodes[code] = {}
-                for indicator in indicators:
-                    newCodes[code][indicator] = tradeDays
+            if tradeDays and indicators:
+                for code in codes:
+                    newCodes[code] = {}
+                    for indicator in indicators:
+                        newCodes[code][indicator] = tradeDays
 
             codes = newCodes
             if not codes:
