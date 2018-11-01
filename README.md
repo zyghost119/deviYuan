@@ -81,6 +81,10 @@ DevilYuan股票量化系统由python编写，支持python3.4及以上版本，�
 2. [下载历史数据](https://github.com/moyuanz/DevilYuan/blob/master/docs/data/DownloadHistoryData.md)
 3. [写一个实盘策略](https://github.com/moyuanz/DevilYuan/blob/master/docs/trade/WriteATradeStrategy.md)
 
+# 文档
+- 架构
+    - [股票交易模块](https://github.com/moyuanz/DevilYuan/blob/master/docs/trade/trade_xmind.png)
+
 # 感谢
 项目的开发过程中借鉴了如下几个开源项目，向以下项目的作者表示衷心的感谢
 - [vnpy](https://github.com/vnpy/vnpy)
