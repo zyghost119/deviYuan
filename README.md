@@ -68,6 +68,13 @@ DevilYuan股票量化系统由python编写，支持python3.4及以上版本，�
     - mpl_finance
         - `pip install https://github.com/matplotlib/mpl_finance/archive/master.zip`
     - pypng
+    - **PyQt5**
+        - 如果你安装的是Anaconda5.3(Python3.7)，并且出现以下错误
+        ```
+        from PyQt5 import QtCore, QtGui, QtWidgets
+        ImportError: DLL load failed: The specified procedure could not be found.
+        ```
+        请执行`pip install pyqt5`
 - VS调试时报异常的包，不调试时不会报错，可选安装
     - datrie
     - crypto
