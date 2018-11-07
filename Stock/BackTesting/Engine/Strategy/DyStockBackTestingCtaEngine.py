@@ -393,7 +393,13 @@ class DyStockBackTestingCtaEngine(object):
 
             # 合成分钟Bar, 右闭合
             # 缺失的Bar设为NaN
-            df = df.resample(str(m) + 'min', closed='right', label='right')[['price', 'volume']].agg(OrderedDict([('price', 'ohlc'), ('volume', 'sum')]))
+            dfMorning = df[:'{} 12:00:00'.format(self._curTDay)] # 上午
+            dfMorning = dfMorning.resample(str(m) + 'min', closed='right', label='right', base=30)[['price', 'volume']].agg(OrderedDict([('price', 'ohlc'), ('volume', 'sum')]))
+
+            dfAfternoon = df['{} 13:00:00'.format(self._curTDay):] # 下午
+            dfAfternoon = dfAfternoon.resample(str(m) + 'min', closed='right', label='right')[['price', 'volume']].agg(OrderedDict([('price', 'ohlc'), ('volume', 'sum')]))
+
+            df = pd.concat([dfMorning, dfAfternoon])
             df.dropna(inplace=True) # drop缺失的Bars
 
             data = df.reset_index().values.tolist()
