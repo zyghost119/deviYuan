@@ -93,7 +93,7 @@ class SimuTrader(WebTrader):
             info.print('交易接口[{}]: 没有持仓数据'.format(cls.brokerName))
             return True
 
-        if data.get('posClose') is not None:
+        if data.get('posClose') is not None and dateFromDb is None:
             info.print('交易接口[{}]: 持仓数据的收盘价已经更新过了'.format(cls.brokerName))
             return True
 
@@ -117,7 +117,7 @@ class SimuTrader(WebTrader):
             closeData[code] = df.ix[0, 'close']
 
         # save to file
-        data.update({'posClose': closeData})
+        data['posClose'] = closeData
 
         accountFile = os.path.join(DyCommon.createPath(cls.accountPath), '{}.json'.format(date))
         with open(accountFile, 'w') as f:
