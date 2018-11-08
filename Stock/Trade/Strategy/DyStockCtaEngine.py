@@ -809,6 +809,29 @@ class DyStockCtaEngine(object):
 
         return None
 
+    def _loadLatestOnClose(self, strategyCls):
+        """
+            载入策略保存的最新数据
+            主要是为了考虑策略可能停过一段交易日后再跑
+            @return: saved data, latest date
+        """
+        path = DyCommon.createPath('Stock/Program/Strategy/{}'.format(strategyCls.chName))
+        for _, dirs, _ in os.walk(path):
+            break
+
+        latestDate = None
+        savedData = None
+        try:
+            latestDate = sorted(dirs)[-1]
+            fileName = os.path.join(path, latestDate, 'savedData.json')
+
+            with open(fileName) as f:
+                savedData = json.load(f)
+        except:
+            pass
+
+        return savedData, latestDate
+
     def loadOnClose(self, date, strategyCls):
         """
             载入策略收盘后保存的数据，用来恢复策略实例状态
@@ -820,21 +843,18 @@ class DyStockCtaEngine(object):
         else:
             dates = [DyStockTradeCommon.strategyPreparedDataDay]
 
-        path = DyCommon.createPath('Stock/Program/Strategy/{}'.format(strategyCls.chName))
+        # load latest saved data of strategy
+        savedData, latestDate = self._loadLatestOnClose(strategyCls)
+        if savedData is None: # It's first time to run this strategy
+            return None
 
-        for date in dates:
-            fileName = os.path.join(path, date, 'savedData.json')
+        # check if date of latest saved data of strategy is previous latest trade day
+        if latestDate not in dates:
+            self._info.print('股票CTA引擎: 策略[{}]保存的数据日期[{}]跟最近的交易日{}不相同。如果策略用了"holdingPeriod"将会有问题'.format(strategyCls.chName, latestDate, dates), DyLogData.warning)
 
-            try:
-                with open(fileName) as f:
-                    savedData = json.load(f)
-
-                    return savedData
-
-            except Exception as ex:
-                pass
-
-        return None
+        # !!!We don't update holding period of strategy positions, just for simplicity.
+        # It means that if strategy cares about holding period, it will bring some problem.
+        return savedData
 
     def saveOnClose(self, date, strategyCls, savedData=None):
         """

@@ -128,7 +128,7 @@ class DyStockDataTdx:
 
         return True
 
-    def _ping(self, ip, port=7709):
+    def _ping(self, ip, port=7709, first=False):
         print('TDX{}: Start connecting to {}:{}...'.format(self._tdxNo, ip, port))
 
         tdxApi = TdxHq_API(raise_exception=True)
@@ -140,6 +140,10 @@ class DyStockDataTdx:
                 return tdxApi, datetime.datetime.now() - startTime
 
             print('TDX{}: Bad response from {}:{}'.format(self._tdxNo, ip, port))
+        except TypeError as ex:
+            print('TDX{}: Exception happened when ping {}:{}, {}'.format(self._tdxNo, ip, port, ex))
+            if first:
+                self._info.print('TDX{}: pytdx版本错误，请先pip uninstall pytdx，然后再pip install pytdx'.format(self._tdxNo), DyLogData.error)
         except Exception as ex:
             print('TDX{}: Exception happened when ping {}:{}, {}'.format(self._tdxNo, ip, port, ex))
  
@@ -150,9 +154,9 @@ class DyStockDataTdx:
 
         # ping all ips
         self._apis = []
-        for ipDict in self.ipList:
+        for i, ipDict in enumerate(self.ipList):
             ip, port = ipDict['ip'], ipDict['port']
-            tdxApi, latency = self._ping(ip, port)
+            tdxApi, latency = self._ping(ip, port, first=i==0)
             if tdxApi is None:
                 continue
             
