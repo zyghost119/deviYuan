@@ -819,16 +819,28 @@ class DyStockCtaEngine(object):
         for _, dirs, _ in os.walk(path):
             break
 
+        # loop from latest date
         latestDate = None
         savedData = None
-        try:
-            latestDate = sorted(dirs)[-1]
+        dirs = sorted(dirs, reverse=True)
+        for i, date in enumerate(dirs):
+            latestDate = date
             fileName = os.path.join(path, latestDate, 'savedData.json')
+            try:
+                with open(fileName) as f:
+                    savedData = json.load(f)
+                break
+            except:
+                if i == len(dirs) - 1: # last one
+                    break
 
-            with open(fileName) as f:
-                savedData = json.load(f)
-        except:
-            pass
+                # 'preparedPosData.json' should be mapping with 'savedData.json'.
+                # 如果用户通过'股票数据'模块的菜单生成策略准备数据，会导致生成的持仓准备数据不是根据最新的策略持仓。
+                # 这样会导致策略的持仓信息跟Broker和AccountManager的持仓信息不一致。
+                posFile = os.path.join(path, latestDate, 'preparedPosData.json')
+                if os.path.exists(posFile):
+                    self._info.print("股票CTA引擎: 策略[{}]持仓准备数据[{}]没有对应的收盘保存数据, 删除{}".format(strategyCls.chName, latestDate, posFile), DyLogData.warning)
+                    os.remove(posFile)
 
         return savedData, latestDate
 
