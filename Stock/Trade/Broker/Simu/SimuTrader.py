@@ -148,7 +148,7 @@ class SimuTrader(WebTrader):
                     return False
 
                 if date != dateFromDb:
-                    self._info.print('交易接口[{0}]: 保存的持仓数据日期[{1}]跟数据库最近的交易日[{2}]不相同'.format(self.brokerName, date, dateFromDb), DyLogData.error)
+                    self._info.print('交易接口[{0}]: 保存的持仓数据日期[{1}]跟数据库最近的交易日[{2}]不相同'.format(self.brokerName, date, dateFromDb), DyLogData.warning)
 
                 return True
 
