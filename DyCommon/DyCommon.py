@@ -383,8 +383,9 @@ class DyMatplotlib:
 
 class DyProgress(object):
 
-    def __init__(self, info):
+    def __init__(self, info, printConsole=False):
         self._info = info
+        self._printConsole = printConsole
 
         # Ui progress related
         self._totalReqNbr = 0
@@ -427,6 +428,7 @@ class DyProgress(object):
 
         # notify Ui progress
         if percent%self._singleUpdateUiStep == 0 or percent == 100:
+            self._printConsoleProgressSingle(percent)
             self._info.progressSingle(percent)
 
         # new start for single progress
@@ -447,6 +449,7 @@ class DyProgress(object):
 
         # notify Ui progress
         if percent%self._totalUpdateUiStep == 0  or percent == 100:
+            self._printConsoleProgressTotal(percent)
             self._info.progressTotal(percent)
 
     def update(self):
@@ -462,6 +465,22 @@ class DyProgress(object):
     @property
     def totalReqCount(self):
         return self._totalReqCount
+
+    def _printConsoleProgressSingle(self, percent):
+        if not self._printConsole:
+            return
+
+        # not a good way to directly access members of @info
+        if self._info._progressSingle != percent:
+            print("Total: {}%, Single: {}%".format(self._info._progressTotal, percent))
+
+    def _printConsoleProgressTotal(self, percent):
+        if not self._printConsole:
+            return
+
+        # not a good way to directly access members of @info
+        if self._info._progressTotal != percent:
+            print("Total: {}%, Single: {}%".format(percent, self._info._progressSingle))
 
 
 class DyCommon:
