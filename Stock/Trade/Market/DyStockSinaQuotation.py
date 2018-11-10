@@ -98,7 +98,7 @@ class DyStockSinaQuotation(object):
         # create HTTP sessions when @self._stockList changed
         if len(self._sessions) != len(self._stockList):
             for s in self._sessions:
-                s.close()
+                yield from s.close()
 
             self._sessions = [aiohttp.ClientSession() for _ in range(len(self._stockList))]
 
