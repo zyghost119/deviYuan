@@ -1363,11 +1363,14 @@ class DyST_TraceFocus(DyStockCtaTemplate):
             从TuSharePro获取股票概念
         """
         conceptsDict = None
+        needSaved2File = False # 回测时使用，这样没必要每次都网上抓取，节省时间。本策略回测，概念数据会导致一定的未来函数。
 
         if isBackTesting:
             conceptsDict = cls.getConceptsFromFile()
 
         if conceptsDict is None:
+            needSaved2File = isBackTesting
+
             info.print('开始从TuSharePro获取股票所属行业和概念...', DyLogData.ind)
 
             ts.set_token(DyStockCommon.tuShareProToken)
@@ -1376,9 +1379,9 @@ class DyST_TraceFocus(DyStockCtaTemplate):
                 conceptsDict = cls.__getConceptsFromTuSharePro(pro)
             except Exception as ex:
                 info.print('TuSharePro: 获取概念异常: {}'.format(ex), DyLogData.error)
-                return None
+                return None, needSaved2File
 
-            info.print('完成从TuSharePro获取股票所属行业和概念', DyLogData.ind)
+            info.print('从TuSharePro获取股票所属行业和概念完成', DyLogData.ind)
 
         filteredConceptsDict = {}
         for code, name in codeTable.items():
@@ -1388,7 +1391,17 @@ class DyST_TraceFocus(DyStockCtaTemplate):
 
             filteredConceptsDict[code] = conceptsDict[code]
 
-        return filteredConceptsDict
+        return filteredConceptsDict, needSaved2File
+
+    @classmethod
+    def _writePreparedData(cls, date, data):
+        """
+            file name is like 'Program\Strategy\strategyCls.chName\date\preparedData.json'
+        """
+        path = DyCommon.createPath('Stock/Program/Strategy/{}/{}'.format(cls.chName, date))
+        fileName = os.path.join(path, 'preparedData.json')
+        with open(fileName, 'w') as f:
+            f.write(json.dumps(data, indent=4, cls=DyJsonEncoder))
 
     @classmethod
     def _prepareConcepts(cls, date, dataEngine, info, codes=None, errorDataEngine=None, strategyParam=None, isBackTesting=False):
@@ -1400,17 +1413,17 @@ class DyST_TraceFocus(DyStockCtaTemplate):
         errorDaysEngine = errorDataEngine.daysEngine
 
         if not daysEngine.loadCodeTable(codes=codes):
-            return None
+            return None, False
 
         # get all codes concepts
-        conceptsDict = cls.__getConcepts(daysEngine.stockCodes, info, isBackTesting)
+        conceptsDict, needSaved2File = cls.__getConcepts(daysEngine.stockCodes, info, isBackTesting)
         if conceptsDict is None:
-            return None
+            return None, False
 
         # classify stocks
         data = cls.classifyCodes(date, list(daysEngine.stockCodes), info, errorDaysEngine, conceptsDict)
 
-        return data
+        return data, needSaved2File
 
     @classmethod
     def _prepareIndicators(cls, date, dataEngine, info, codes=None, errorDataEngine=None, strategyParam=None, isBackTesting=False):
@@ -1510,7 +1523,7 @@ class DyST_TraceFocus(DyStockCtaTemplate):
         preparedData = {}
 
         # 股票概念
-        data = cls._prepareConcepts(date, dataEngine, info, codes, errorDataEngine, strategyParam, isBackTesting)
+        data, needSaved2File = cls._prepareConcepts(date, dataEngine, info, codes, errorDataEngine, strategyParam, isBackTesting)
         if data is None:
             return None
         preparedData.update(data)
@@ -1520,6 +1533,9 @@ class DyST_TraceFocus(DyStockCtaTemplate):
         if data is None:
             return None
         preparedData.update(data)
+
+        if needSaved2File:
+            cls._writePreparedData(date, preparedData)
 
         return preparedData
 
