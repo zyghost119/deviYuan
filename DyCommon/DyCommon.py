@@ -471,16 +471,22 @@ class DyProgress(object):
             return
 
         # not a good way to directly access members of @info
-        if self._info._progressSingle != percent:
-            print("Total: {}%, Single: {}%".format(self._info._progressTotal, percent))
+        try:
+            if self._info._progressSingle != percent:
+                print("Total: {}%, Single: {}%".format(self._info._progressTotal, percent))
+        except:
+            pass
 
     def _printConsoleProgressTotal(self, percent):
         if not self._printConsole:
             return
 
         # not a good way to directly access members of @info
-        if self._info._progressTotal != percent:
-            print("Total: {}%, Single: {}%".format(percent, self._info._progressSingle))
+        try:
+            if self._info._progressTotal != percent:
+                print("Total: {}%, Single: {}%".format(percent, self._info._progressSingle))
+        except:
+            pass
 
 
 class DyCommon:
