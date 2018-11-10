@@ -478,6 +478,7 @@
     <Compile Include="Stock\Trade\Strategy\Cta\DyST_IntraDayT.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Stock\Trade\Strategy\Cta\DyST_TraceFocus.py" />
     <Compile Include="Stock\Trade\Strategy\DyStockCtaEngineExtra.py">
       <SubType>Code</SubType>
     </Compile>
