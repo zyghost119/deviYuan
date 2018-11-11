@@ -243,7 +243,10 @@ class DyStockHistDaysDataSourceConfigDlg(QDialog):
 
     def _checkBoxClicked(self):
         if not self._windCheckBox.isChecked() and not self._tuShareCheckBox.isChecked():
-            self._windCheckBox.setChecked(True)
+            if sys.platform == 'win32':
+                self._windCheckBox.setChecked(True)
+            else:
+                self._tuShareCheckBox.setChecked(True)
 
         self._enableTradeDaysComboBox()
 
