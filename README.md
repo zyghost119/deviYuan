@@ -61,7 +61,7 @@ DevilYuan股票量化系统由python编写，支持python3.4及以上版本，�
     - pymongo
     - qdarkstyle
     - pytesseract
-    - pywinauto
+    - pywinauto(Windows)
     - talib
         - Windows
             - 请到[这儿](https://www.lfd.uci.edu/~gohlke/pythonlibs/#ta-lib)安装对应的whl版本
