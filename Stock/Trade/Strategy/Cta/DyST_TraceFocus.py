@@ -15,8 +15,6 @@ class DyST_TraceFocus(DyStockCtaTemplate):
 
     broker = 'simu9'
 
-    backTestingMode = 'bar1m'
-
     #--------------------- 风控相关 ---------------------
     curCodeBuyMaxNbr = 1
 
@@ -1232,7 +1230,7 @@ class DyST_TraceFocus(DyStockCtaTemplate):
         self._procSignal(ticks)
 
     def onBars(self, bars):
-        self.onTicks(bars)
+        raise Exception("策略[{}]只支持Tick级别的运行方式".format(self.chName))
 
 
     ######################################## 开盘前的数据准备 ########################################
