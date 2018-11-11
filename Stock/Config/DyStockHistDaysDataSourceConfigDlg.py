@@ -1,3 +1,4 @@
+import sys
 import json
 from collections import OrderedDict
 
@@ -97,6 +98,10 @@ class DyStockHistDaysDataSourceConfigDlg(QDialog):
         # set data source to UI
         if self._data.get('Wind'):
             self._windCheckBox.setChecked(True)
+
+        if sys.platform != 'win32': # Wind only supported at Windows.
+            self._windCheckBox.setEnabled(False)
+            self._windCheckBox.setChecked(False)
 
         enableTuSharePro = False
         if self._data.get('TuShare'):

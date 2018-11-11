@@ -10,8 +10,12 @@ import pandas as pd
 from . import pop_dialog_handler
 
 if not sys.platform.startswith("darwin"):
-    import pywinauto
-    import pywinauto.clipboard
+    try:
+        import pywinauto
+        import pywinauto.clipboard
+    except:
+        if sys.platform == 'win32':
+            raise
 
 
 class IGridStrategy(abc.ABC):

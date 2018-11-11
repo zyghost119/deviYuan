@@ -14,8 +14,12 @@ import pandas as pd
 # https://stackoverflow.com/questions/49043570/pyqt5-qfiledialog-does-not-work-with-pywinauto-import
 import sys
 sys.coinit_flags = 2 # STA
-import pywinauto
-import pywinauto.clipboard
+try:
+    import pywinauto
+    import pywinauto.clipboard
+except:
+    if sys.platform == 'win32':
+        raise
 
 from . import exceptions
 from . import helpers
