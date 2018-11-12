@@ -11,7 +11,7 @@ class DyStockStopLossMaMode(DyStockStopMode):
 
         self._dataEngine = dataEngine
         self._daysEngine = self._dataEngine.daysEngine
-        self._ma = ma
+        self._ma = int(ma)
 
         self._tradeStartTime = '14:55:00'
 
