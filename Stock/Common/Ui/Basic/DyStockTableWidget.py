@@ -4,13 +4,8 @@ import struct
 import requests
 from bs4 import BeautifulSoup
 import re
+import webbrowser
 
-try:
-    from PyQt5.QtWebKitWidgets import QWebView as DyWebView
-except ImportError:
-    from PyQt5.QtWebEngineWidgets import QWebEngineView as DyWebView
-
-from PyQt5.QtCore import QUrl
 from PyQt5.QtWidgets import QApplication, QFileDialog
 from PyQt5 import QtCore
 
@@ -351,23 +346,11 @@ class DyStockTableWidget(DyStatsTableWidget):
 
     def _stockInfoAct(self):
         code, name = self.getRightClickCodeName()
-        if code is None: return
+        if code is None:
+            return
 
-        browser = DyWebView()
         url = 'http://basic.10jqka.com.cn/32/{0}/'.format(code[:-3])
-        browser.load(QUrl(url))
-
-        browser.setWindowTitle(name)
-        
-        rect = QApplication.desktop().availableGeometry()
-        taskBarHeight = QApplication.desktop().height() - rect.height()
-
-        browser.resize(rect.width()//3 * 2, rect.height() - taskBarHeight)
-        browser.move((rect.width() - browser.width())//2, 0)
-
-        browser.show()
-
-        self._windows.append(browser)
+        webbrowser.open_new_tab(url)
 
     def _newIndustryCompareWindow(self, code, name, baseDate, dfs):
         window = DyStockIndustryCompareWindow(self._eventEngine, DyStockTableWidget, code, name, baseDate)
