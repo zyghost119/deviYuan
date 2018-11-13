@@ -36,9 +36,8 @@ class DyStockHistDaysDataSourceConfigDlg(QDialog):
         self._tuShareCheckBox.clicked.connect(self._tuShareCheckBoxClicked)
 
         self._tuShareProCheckBox = QCheckBox('TuSharePro')
-        self._tuShareProCheckBox.clicked.connect(self._tuShareProCheckBoxClicked)
 
-        self._tuShareProTokenLabel = QLabel('TuSharePro token')
+        tuShareProTokenLabel = QLabel('TuSharePro token')
         self._tuShareProTokenLineEdit = QLineEdit()
 
         description = """默认使用Wind
@@ -76,7 +75,7 @@ class DyStockHistDaysDataSourceConfigDlg(QDialog):
         grid.addWidget(self._windCheckBox, 1, 0)
         grid.addWidget(self._tuShareCheckBox, 2, 0)
         grid.addWidget(self._tuShareProCheckBox, 3, 0)
-        grid.addWidget(self._tuShareProTokenLabel, 4, 0)
+        grid.addWidget(tuShareProTokenLabel, 4, 0)
         grid.addWidget(self._tuShareProTokenLineEdit, 5, 0)
 
         grid.addWidget(textEdit, 6, 0)
@@ -115,9 +114,6 @@ class DyStockHistDaysDataSourceConfigDlg(QDialog):
         if self._tuShareProData.get('TuSharePro'):
             self._tuShareProCheckBox.setChecked(True)
             enableTushareProToken = True
-
-        self._tuShareProTokenLabel.setEnabled(enableTuSharePro and enableTushareProToken)
-        self._tuShareProTokenLineEdit.setEnabled(enableTuSharePro and enableTushareProToken)
 
         if self._tuShareProData.get('Token'):
             self._tuShareProTokenLineEdit.setText(self._tuShareProData.get('Token'))
@@ -258,13 +254,3 @@ class DyStockHistDaysDataSourceConfigDlg(QDialog):
 
         enable = self._tuShareCheckBox.isChecked()
         self._tuShareProCheckBox.setEnabled(enable)
-
-        enableToken = self._tuShareProCheckBox.isChecked()
-        self._tuShareProTokenLabel.setEnabled(enable and enableToken)
-        self._tuShareProTokenLineEdit.setEnabled(enable and enableToken)
-
-    def _tuShareProCheckBoxClicked(self):
-        enable = self._tuShareProCheckBox.isChecked()
-
-        self._tuShareProTokenLabel.setEnabled(enable)
-        self._tuShareProTokenLineEdit.setEnabled(enable)
