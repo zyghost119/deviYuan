@@ -2,8 +2,11 @@ import json
 import re
 import requests
 from bs4 import BeautifulSoup
+import tushare as ts
+import pandas as pd
 
 from DyCommon.DyCommon import *
+from Stock.Common.DyStockCommon import DyStockCommon
 
 
 class DyStockDataSpider(object):
@@ -15,6 +18,19 @@ class DyStockDataSpider(object):
                   '每股收益(元)': '基本每股收益',
                   '每股现金流(元)': '每股经营现金流'
                  }
+
+    pro = None
+    companyInfoDf = None # DF['所属行业', '主营业务']
+
+
+    def _startPro(func):
+        def wrapper(cls, *args, **kwargs):
+            if cls.pro is None:
+                ts.set_token(DyStockCommon.tuShareProToken)
+                cls.pro = ts.pro_api()
+
+            return func(cls, *args, **kwargs)
+        return wrapper
 
     def _dy2Jqka(indicators):
         return [DyStockDataSpider.dy2JqkaMap[x] for x in indicators]
@@ -159,63 +175,37 @@ class DyStockDataSpider(object):
         realFreeShares = (freeShares - lockedShares)/10000
         return realFreeShares, lockedShareType
 
-    def getCompanyInfo(code, indicators):
-        colNames = ['所属行业', '主营业务', '涉及概念']
-
-        # filter
-        newColNames = []
-        for name in colNames:
-            if name in indicators:
-                newColNames.append(name)
-
-        newColData = [None]*len(newColNames)
-
-        try:
-            r = requests.get('http://basic.10jqka.com.cn/16/{0}/'.format(code[:-3]))
-
-            soup = BeautifulSoup(r.text, 'lxml')
-
-            tag = soup.find('h2', text='公司概要')
-            companyOutline = tag.parent.parent
-
+    @classmethod
+    @_startPro
+    def getCompanyInfo(cls, code, indicators):
+        """
+            由于TuSharePro抓取概念过于复杂且耗时，暂时不支持"涉及概念"。
+            当然还有一种办法是从"追踪热点"策略保存的磁盘文件读取概念。
+        """
+        colNames = ['所属行业', '主营业务']
+        if cls.companyInfoDf is None:
             # 所属行业
-            if '所属行业' in newColNames:
-                tag = companyOutline.find('span', text='所属行业：')
-                content = str(tag.next_sibling.next_sibling.string)
-
-                newColData[newColNames.index('所属行业')] = content
+            industryDf = cls.pro.stock_basic(exchange='', list_status='L', fields='ts_code,industry')
 
             # 主营业务
-            if '主营业务' in newColNames:
-                tag = companyOutline.find('span', text='主营业务：')
-                tr = tag.parent.parent
-                tag = tr.find('a')
-                content = str(tag.string)
+            dfSh = cls.pro.stock_company(exchange='SSE', fields='ts_code,main_business')
+            dfSz = cls.pro.stock_company(exchange='SZSE', fields='ts_code,main_business')
+            mainBusinessDf = pd.concat([dfSh, dfSz])
 
-                newColData[newColNames.index('主营业务')] = content
+            # merge
+            cls.companyInfoDf = industryDf.merge(mainBusinessDf, on='ts_code').set_index('ts_code')
+            cls.companyInfoDf.rename(columns={'industry': '所属行业', 'main_business': '主营业务'}, inplace=True)
 
-            # 涉及概念
-            if '涉及概念' in newColNames:
-                tag = companyOutline.find('div', text='概念强弱排名：')
-                if tag is None:
-                    tag = companyOutline.find('span', text='涉及概念：')
+        newColNames = [name for name in indicators if name in colNames]
 
-                tag = tag.next_sibling.next_sibling
-                tags = tag.find_all('a')
-                contents = []
-                for tag in tags:
-                    content = tag.contents[0]
-                    if content == '详情>>': continue
+        colData = []
+        for name in newColNames:
+            try:
+                data = cls.companyInfoDf.loc[code, name]
+            except:
+                data = None
 
-                    if tag.has_attr('title'):
-                        rank = tag['title'][-1]
-                        content += '(' + rank + ')'
+            colData.append(data)
+
+        return newColNames, colData
         
-                    contents.append(content)
-
-                newColData[newColNames.index('涉及概念')] = ','.join(contents)
-
-        except Exception as ex:
-            pass
-
-        return newColNames, newColData
