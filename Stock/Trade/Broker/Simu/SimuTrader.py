@@ -105,10 +105,11 @@ class SimuTrader(WebTrader):
         errorDaysEngine = cls.__constructErrorDaysEngine(eventEngine)
 
         # load close for each position
+        closeDate = date if dateFromDb is None else dateFromDb
         closeData = {}
         for pos in positions:
             code = pos[0]
-            if not errorDaysEngine.loadCode(code, [date if dateFromDb is None else dateFromDb, 0], latestAdjFactorInDb=False):
+            if not errorDaysEngine.loadCode(code, [closeDate, 0], latestAdjFactorInDb=False):
                 info.print('交易接口[{}]: {}({})数据库数据有问题'.format(cls.brokerName, code, pos[1]), DyLogData.error)
                 return False
 
@@ -123,7 +124,7 @@ class SimuTrader(WebTrader):
         with open(accountFile, 'w') as f:
             f.write(json.dumps(data, indent=4))
 
-        info.print('交易接口[{}]: 持仓数据的收盘价更新完成'.format(cls.brokerName), DyLogData.ind1)
+        info.print('交易接口[{}]: 持仓数据[{}]的收盘价[{}]更新完成'.format(cls.brokerName, date, closeDate), DyLogData.ind1)
 
         return True
 
@@ -173,10 +174,10 @@ class SimuTrader(WebTrader):
         if not self.__verifyAccountFileDate(date):
             return False
 
-        # 收盘数据不是今天的并且还没更新过持仓的收盘价，则需要更新持仓的收盘价到文件
+        # 收盘数据不是昨天(最新)的并且还没更新过持仓的收盘价，则需要更新持仓的收盘价到文件
         dateFromDb = self.__getDateFromDb()
         if date is not None and ((dateFromDb == date and data.get('posClose') is None) or dateFromDb > date):
-            self._info.print('交易接口[{}]: 保存的持仓数据[{}]没有收盘价'.format(self.brokerName, date), DyLogData.ind)
+            self._info.print('交易接口[{}]: 保存的持仓数据[{}]的收盘价不是最新或者没有，更新到最新收盘价'.format(self.brokerName, date), DyLogData.ind)
 
             # update close of pos
             if not self.updatePosClose(self._eventEngine, self._info, dateFromDb=dateFromDb):
