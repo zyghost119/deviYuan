@@ -15,7 +15,7 @@ class DyStockSelectAddColumnsDlg(QDialog):
  
         # 控件
         increaseColumnsLable = QLabel('基准日期几日{0}'.format(title))
-        self._increaseColumnsLineEdit = QLineEdit(','.join(self._data['days']) if self._data else '2,3,4,5,10' )
+        self._increaseColumnsLineEdit = QLineEdit(','.join(self._data['days']) if self._data else '1,2,3,4,5,10')
 
         # 前 & 后
         forwardRadioButton = QRadioButton('向前')

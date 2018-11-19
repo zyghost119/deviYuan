@@ -33,8 +33,8 @@ class DyStockSelectStrategyTemplate(object):
     continuousTicks = False # Ticks数据是不是以连续模式推入策略，非连续模式为{date: ticksDF of date}
 
     #----- 基类私有变量, 几日是跟@__nDays相对应 -----
-    __baseColNames = ['当日价格', '当日涨幅(%)', '当日指数涨幅(%)', '1日涨幅(%)', '1日指数涨幅(%)', '流通市值(亿)']
-    __nDays = 1
+    __baseColNames = ['当日价格', '当日涨幅(%)', '当日指数涨幅(%)', '流通市值(亿)']
+    __nDays = 0 # 后@__nDays日个股涨幅和指数涨幅，看起来比较鸡肋，所以去掉
 
 
     def __init__(self, param, info):
@@ -183,13 +183,14 @@ class DyStockSelectStrategyTemplate(object):
             stock.append('') if increase is None else stock.append(increase)
 
             #----- @nDays涨幅 -----
-            # 个股
-            increase = self.__stockIncrease(stock[0], daysEngine)
-            stock.append('') if increase is None else stock.append(increase)
-                
-            # 指数
-            increase = self.__indexIncrease(daysEngine.getIndex(stock[0]), daysEngine)
-            stock.append('') if increase is None else stock.append(increase)
+            if self.__nDays > 0:
+                # 个股
+                increase = self.__stockIncrease(stock[0], daysEngine)
+                stock.append('') if increase is None else stock.append(increase)
+                    
+                # 指数
+                increase = self.__indexIncrease(daysEngine.getIndex(stock[0]), daysEngine)
+                stock.append('') if increase is None else stock.append(increase)
 
             # 流通市值
             floatMarketValue = self.__floatMarketValue(stock[0], daysEngine)

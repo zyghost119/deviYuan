@@ -15,11 +15,11 @@ class DyStockTableAddColumnsDlg(QDialog):
  
         # 控件
         increaseColumnsLable = QLabel('基准日期几日{0}'.format(title))
-        self._increaseColumnsLineEdit = QLineEdit(','.join([str(x) for x in self._data['days']]) if self._data else '2,3,4,5,10' )
+        self._increaseColumnsLineEdit = QLineEdit(','.join([str(x) for x in self._data['days']]) if self._data else '1,2,3,4,5,10')
 
         # 前 & 后
         forwardRadioButton = QRadioButton('向前')
-        backwardRadioButton = QRadioButton('向后');
+        backwardRadioButton = QRadioButton('向后')
         if backward:
             backwardRadioButton.setChecked(True)
         else:
@@ -27,7 +27,7 @@ class DyStockTableAddColumnsDlg(QDialog):
 
         # 添加到QButtonGroup
         self._wardButtonGroup = QButtonGroup()
-        self._wardButtonGroup.addButton(forwardRadioButton, 1); 
+        self._wardButtonGroup.addButton(forwardRadioButton, 1)
         self._wardButtonGroup.addButton(backwardRadioButton, 2)
 
         cancelPushButton = QPushButton('Cancel')
