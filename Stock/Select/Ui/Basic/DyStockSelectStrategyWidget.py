@@ -3,82 +3,13 @@ from PyQt5.QtWidgets import QAbstractItemView
 from DyCommon.Ui.DyTreeWidget import *
 from EventEngine.DyEvent import *
 
-# CTA
-from ...Strategy.Cta.DySS_BBands import *
-from ...Strategy.Cta.DySS_MacdBottomDeviation import *
-from ...Strategy.Cta.DySS_RisingEve import *
-from ...Strategy.Cta.DySS_PlatformUpBreakThrough import *
-from ...Strategy.Cta.DySS_Stagflation import *
-from ...Strategy.Cta.DySS_StrongBack import *
-from ...Strategy.Cta.DySS_OverSold import *
-from ...Strategy.Cta.DySS_LimitUpRise import *
-from ...Strategy.Cta.DySS_NeedleBottom import *
-from ...Strategy.Cta.DySS_MasLong import *
-from ...Strategy.Cta.DySS_MasAttack import *
-from ...Strategy.Cta.DySS_Rebound import *
-from ...Strategy.Cta.DySS_MaWalk import *
-from ...Strategy.Cta.DySS_HighTurn import *
-from ...Strategy.Cta.DySS_InsideRedLine import *
-from ...Strategy.Cta.DySS_SwingTrough import DySS_SwingTrough
-
-# Stats
-from ...Strategy.Stats.DySS_Correlation import *
-from ...Strategy.Stats.DySS_LimitUp import *
-from ...Strategy.Stats.DySS_UpDownList import *
-from ...Strategy.Stats.DySS_AbnormalVolatility import *
-from ...Strategy.Stats.DySS_LimitUpAnalysis import *
-from ...Strategy.Stats.DySS_LimitUpPredict import *
-from ...Strategy.Stats.DySS_Pairs import *
-from ...Strategy.Stats.DySS_ChipDist import DySS_ChipDist
-
-# Fundamental
-from ...Strategy.Fundamental.DySS_High2SendStocks import *
-from ...Strategy.Fundamental.DySS_GrowingStocks import *
-
-# Other
-from ...Strategy.Other.DySS_ETF import *
+from . import DyStockSelectStrategyWidgetAutoFields
 
 
 class DyStockSelectStrategyWidget(DyTreeWidget):
 
-    strategyFields = \
-        [
-            ['CTA',
-                [DySS_MacdBottomDeviation],
-                [DySS_NeedleBottom],
-                [DySS_BBands],
-                [DySS_RisingEve],
-                [DySS_PlatformUpBreakThrough],
-                [DySS_Stagflation],
-                [DySS_StrongBack],
-                [DySS_OverSold],
-                [DySS_LimitUpRise],
-                [DySS_MasLong],
-                [DySS_MasAttack],
-                [DySS_Rebound],
-                [DySS_MaWalk],
-                [DySS_HighTurn],
-                [DySS_InsideRedLine],
-                [DySS_SwingTrough],
-            ],
-            ['统计分析',
-                [DySS_Correlation],
-                [DySS_LimitUp],
-                [DySS_UpDownList],
-                [DySS_AbnormalVolatility],
-                [DySS_LimitUpAnalysis],
-                [DySS_LimitUpPredict],
-                [DySS_Pairs],
-                [DySS_ChipDist],
-            ],
-            ['基本面',
-                [DySS_High2SendStocks],
-                [DySS_GrowingStocks],
-            ],
-            ['其他',
-                [DySS_ETF],
-            ]
-        ]
+    strategyFields = DyStockSelectStrategyWidgetAutoFields
+    
 
     def __init__(self, paramWidget=None):
         self._strategies = {} # {strategy chName: strategy class}
