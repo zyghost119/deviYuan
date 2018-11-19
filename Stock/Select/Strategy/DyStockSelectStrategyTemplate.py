@@ -123,6 +123,10 @@ class DyStockSelectStrategyTemplate(object):
         """ 指数日线数据 """
         pass
 
+    def onEtfDays(self, code, df):
+        """ ETF日线数据 """
+        pass
+
     def onStockDays(self, code, df):
         """ 个股日线数据 """
         pass

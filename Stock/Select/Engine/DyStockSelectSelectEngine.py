@@ -1,3 +1,5 @@
+import traceback
+
 from ...Data.Engine.DyStockDataEngine import *
 from EventEngine.DyEvent import *
 from ..DyStockSelectCommon import *
@@ -209,13 +211,21 @@ class DyStockSelectSelectEngine(object):
         self._info.print("开始运行日线数据...")
 
         # init progress
-        self._progress.init(len(self._daysEngine.stockAllCodes), 100, 5)
+        self._progress.init(len(self._daysEngine.stockAllCodesFunds), 100, 5)
 
         # index loop
         for index in self._daysEngine.stockIndexes:
             df = self._daysEngine.getDataFrame(index, self._startDay, self._endDay)
             if df is not None:
                 self._strategy.onIndexDays(index, df)
+
+            self._progress.update()
+
+        # ETF loop
+        for etfCode in self._daysEngine.stockFunds:
+            df = self._daysEngine.getDataFrame(etfCode, self._startDay, self._endDay)
+            if df is not None:
+                self._strategy.onEtfDays(etfCode, df)
 
             self._progress.update()
 
@@ -282,7 +292,8 @@ class DyStockSelectSelectEngine(object):
         try:
             self._strategy.onInit(self._dataEngine, self._errorDataEngine)
         except Exception as ex:
-            self._info.print('策略onInit异常', DyLogData.error)
+            traceback.print_exc()
+            self._info.print('策略onInit异常: {}'.format(ex), DyLogData.error)
             return False
 
         # run loop

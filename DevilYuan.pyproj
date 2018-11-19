@@ -300,6 +300,7 @@
     <Compile Include="Stock\Select\Strategy\Cta\DySS_SwingTrough.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Stock\Select\Strategy\Cta\DySS_Th666.py" />
     <Compile Include="Stock\Select\Strategy\Other\DySS_ETF.py">
       <SubType>Code</SubType>
     </Compile>

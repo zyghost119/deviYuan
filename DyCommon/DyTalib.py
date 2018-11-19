@@ -1,4 +1,9 @@
 import numpy as np
+import pandas as pd
+
+"""
+    Defaultly, in/out paramters are  numpy array.
+"""
 
 
 DyTalibExpAdjust = True # pandas默认是True，同花顺默认是False。True时，最近的值权重会大些。数据足够多的时候，趋向一致。
@@ -149,3 +154,44 @@ def WATR(highs, lows, closes, W, timeperiod=14):
     atr.insert(0, np.nan)
 
     return atr
+
+def HHV(v, N):
+    """
+        @v: numpy array or list
+        @return: numpy array
+    """
+    return pd.Series(v).rolling(N).max().values
+
+
+def LLV(v, N):
+    """
+        @v: numpy array or list
+        @return: numpy array
+    """
+    return pd.Series(v).rolling(N).min().values
+
+def KDJ(highs, lows, closes, N=9, M1=3, M2=3, adjust=DyTalibExpAdjust):
+    """
+        @closes, highs, lows: numpy array
+        @return: numpy array
+    """
+    C = closes
+    H = highs
+    L = lows
+
+    RSV = (C - LLV(L, N)) / (HHV(H, N) - LLV(L, N)) * 100
+    RSV = RSV[~np.isnan(RSV)]
+    K = SMA(RSV, N, M1, adjust=adjust)
+    D = SMA(K, N, M2, adjust=adjust)
+    J = 3 * np.array(K) - 2 * np.array(D)
+    return K, D, J
+
+def SINGLE_GOLDEN_CROSS(A, B):
+    if A[-2] < B[-2] and A[-1] > B[-1]:
+        return True
+    
+    return False
+
+def GOLDEN_CROSS(A, B):
+    var = np.where(A < B, 1, 0)
+    return (pd.Series(var).diff() < 0).values
