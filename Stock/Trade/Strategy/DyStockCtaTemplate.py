@@ -278,9 +278,9 @@ class DyStockCtaTemplate(object):
         for code, pos in self._curPos.items():
             positions[code] = pos.getSavedData()
 
-        # add into saved data
-        if positions:
-            self._curSavedData['pos'] = positions
+        # add pos into saved data
+        assert 'pos' not in self._curSavedData # prevent strategy using 'pos' which is reserved by DY system.
+        self._curSavedData['pos'] = positions
 
         self._ctaEngine.saveOnClose(self._curTDay, self.__class__, self._curSavedData)
 

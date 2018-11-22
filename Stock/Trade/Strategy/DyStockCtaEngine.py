@@ -873,8 +873,7 @@ class DyStockCtaEngine(object):
             保存策略收盘后的数据，用来恢复策略实例状态
             @date: 当日
         """
-        if not savedData:
-            return
+        self._info.print('股票CTA引擎: 策略[{}]保存当日收盘数据'.format(strategyCls.chName), DyLogData.ind1)
 
         path = DyCommon.createPath('Stock/Program/Strategy/{}/{}'.format(strategyCls.chName, date))
         fileName = os.path.join(path, 'savedData.json')
