@@ -75,7 +75,7 @@ class DyStockBackTestingStrategyPeriodsResultWidget(QTabWidget):
         return (curPnlRatio - 1)*100
 
     def overview(self):
-        columns = ['盈亏(%)', '年化盈亏(%)', '最大回撤(%)', '最大亏损(%)', '最大盈利(%)', '胜率(%)', '夏普比率']
+        columns = ['盈亏(%)', '年化盈亏(%)', '最大回撤(%)', '最大亏损(%)', '最大盈利(%)', '胜率(%)', '盈亏比(%/金额)', '夏普比率']
 
         pnlRatio = 1; pnlRatioPos = columns.index('盈亏(%)')
         annualPnlRatio = 1; annualPnlRatioPos = columns.index('年化盈亏(%)')
@@ -83,6 +83,7 @@ class DyStockBackTestingStrategyPeriodsResultWidget(QTabWidget):
         maxLoss = None; maxLossPos = columns.index('最大亏损(%)')
         maxProfit = None; maxProfitPos = columns.index('最大盈利(%)')
         hitRate = 0; hitRatePos = columns.index('胜率(%)'); hitRateCount = 0
+        profitOverLossPct = 0; profitOverLossCash = 0; profitOverLossPos = columns.index('盈亏比(%/金额)'); profitOverLossCount = 0
         sharpe = 0; sharpePos = columns.index('夏普比率'); sharpeCount = 0
 
         for _, widget in self._strategyPeriodWidgets.items():
@@ -106,11 +107,21 @@ class DyStockBackTestingStrategyPeriodsResultWidget(QTabWidget):
                 sharpe += data[sharpePos]
                 sharpeCount += 1
 
+            # '盈亏比(%/金额)'，近似算法
+            try:
+                pctValue, cashValue = data[profitOverLossPos].split("/")
+                profitOverLossPct += float(pctValue)
+                profitOverLossCash += float(cashValue)
+                profitOverLossCount += 1
+            except:
+                pass
+
         # adjust
         pnlRatio = (pnlRatio - 1)*100
         annualPnlRatio = (annualPnlRatio - 1)*100
         hitRate = hitRate/hitRateCount if hitRateCount > 0 else 'N/A'
         sharpe = sharpe/sharpeCount if sharpeCount > 0 else 'N/A'
+        profitOverLoss = '{:.2f}/{:.2f}'.format(profitOverLossPct/profitOverLossCount, profitOverLossCash/profitOverLossCount) if profitOverLossCount > 0 else 'N/A'
 
-        return columns, [pnlRatio, annualPnlRatio, maxDrop, maxLoss, maxProfit, hitRate, sharpe]
+        return columns, [pnlRatio, annualPnlRatio, maxDrop, maxLoss, maxProfit, hitRate, profitOverLoss, sharpe]
 
