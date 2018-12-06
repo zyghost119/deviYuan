@@ -33,6 +33,8 @@ class DyStockDataGateway(object):
     tuShareDaysSleepTime = 0
     tuShareDaysSleepTimeStep = 5
 
+    tuShareProDaysSleepTimeConst = 0 # It's set by config
+
 
     def __init__(self, eventEngine, info, registerEvent=True):
         self._eventEngine = eventEngine
@@ -552,6 +554,7 @@ class DyStockDataGateway(object):
         for _ in range(retry):
             try:
                 # ohlcv, amount
+                sleep(self.tuShareProDaysSleepTimeConst)
                 dailyDf = self._tuSharePro.daily(ts_code=code, start_date=proStartDate, end_date=proEndDate)
                 dailyDf = dailyDf.set_index('trade_date')
                 dailyDf = dailyDf[['open', 'high', 'low', 'close', 'vol', 'amount']]
@@ -561,6 +564,7 @@ class DyStockDataGateway(object):
                 dailyDf.index = pd.to_datetime(dailyDf.index, format='%Y%m%d')
 
                 # adj factor
+                sleep(self.tuShareProDaysSleepTimeConst)
                 adjFactorDf = self._tuSharePro.adj_factor(ts_code=code, start_date=proStartDate, end_date=proEndDate)
                 adjFactorDf = adjFactorDf.set_index('trade_date')
                 adjFactorDf = adjFactorDf[['adj_factor']]
@@ -568,6 +572,7 @@ class DyStockDataGateway(object):
                 adjFactorDf.index = pd.to_datetime(adjFactorDf.index, format='%Y%m%d')
 
                 # turn
+                sleep(self.tuShareProDaysSleepTimeConst)
                 dailyBasicDf = self._tuSharePro.daily_basic(ts_code=code, start_date=proStartDate, end_date=proEndDate)
                 dailyBasicDf = dailyBasicDf.set_index('trade_date')
                 dailyBasicDf = dailyBasicDf[['turnover_rate']]

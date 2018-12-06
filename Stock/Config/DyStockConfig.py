@@ -42,6 +42,7 @@ class DyStockConfig(object):
     defaultTradeDaysMode = {"tradeDaysMode": "Verify"}
 
     defaultTuShareDaysInterval = {"interval": 0}
+    defaultTuShareProDaysInterval = {"interval": 0}
 
 
     def getDefaultHistDaysDataSource():
@@ -233,11 +234,33 @@ class DyStockConfig(object):
 
         return file
 
+    def _configStockTuShareProDaysInterval():
+        file = DyStockConfig.getStockTuShareProDaysIntervalFileName()
+
+        # open
+        try:
+            with open(file) as f:
+                data = json.load(f)
+        except:
+            data = DyStockConfig.defaultTuShareProDaysInterval
+
+        DyStockConfig.configStockTuShareProDaysInterval(data)
+
+    def configStockTuShareProDaysInterval(data):
+        DyStockDataGateway.tuShareProDaysSleepTimeConst = data["interval"]
+
+    def getStockTuShareProDaysIntervalFileName():
+        path = DyCommon.createPath('Stock/User/Config/Common')
+        file = os.path.join(path, 'DyStockTuShareProDaysInterval.json')
+
+        return file
+
     def config():
         DyStockConfig._configStockHistDaysDataSource() # first
         DyStockConfig._configStockHistDaysTuSharePro()
         DyStockConfig._configStockTradeDaysMode()
         DyStockConfig._configStockTuShareDaysInterval()
+        DyStockConfig._configStockTuShareProDaysInterval()
         DyStockConfig._configStockMongoDb()
         DyStockConfig._configStockWxScKey()
         DyStockConfig._configStockAccount()

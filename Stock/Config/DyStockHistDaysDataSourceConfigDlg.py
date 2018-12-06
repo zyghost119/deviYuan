@@ -66,6 +66,7 @@ class DyStockHistDaysDataSourceConfigDlg(QDialog):
         tradeDaysTextEdit.setReadOnly(True)
 
         self._tuShareDaysIntervalLineEdit = QLineEdit() # TuShare日线数据每次下载间隔时间（秒）
+        self._tuShareProDaysIntervalLineEdit = QLineEdit() # TuSharePro日线数据每次下载间隔时间（秒）
 
         # 布局
         grid = QGridLayout()
@@ -88,6 +89,9 @@ class DyStockHistDaysDataSourceConfigDlg(QDialog):
         grid.addWidget(QLabel("                                                                 "), 11, 0)
         grid.addWidget(QLabel("TuShare日线数据下载间隔时间(秒)"), 12, 0)
         grid.addWidget(self._tuShareDaysIntervalLineEdit, 13, 0)
+
+        grid.addWidget(QLabel("TuSharePro日线数据下载间隔时间(秒)"), 14, 0)
+        grid.addWidget(self._tuShareProDaysIntervalLineEdit, 15, 0)
 
         grid.addWidget(okPushButton, 0, 1)
         grid.addWidget(cancelPushButton, 1, 1)
@@ -130,6 +134,9 @@ class DyStockHistDaysDataSourceConfigDlg(QDialog):
         # tushare days downloading interval
         self._tuShareDaysIntervalLineEdit.setText(str(self._tuShareDaysIntervalData['interval']))
 
+        # tusharepro days downloading interval
+        self._tuShareProDaysIntervalLineEdit.setText(str(self._tuShareProDaysIntervalData['interval']))
+
         self.resize(QApplication.desktop().size().width()//2, QApplication.desktop().size().height()//4*3)
         
     def _read(self):
@@ -168,6 +175,15 @@ class DyStockHistDaysDataSourceConfigDlg(QDialog):
                 self._tuShareDaysIntervalData = json.load(f)
         except:
             self._tuShareDaysIntervalData = DyStockConfig.defaultTuShareDaysInterval
+
+        # interval of tusharepro days downloading
+        file = DyStockConfig.getStockTuShareProDaysIntervalFileName()
+
+        try:
+            with open(file) as f:
+                self._tuShareProDaysIntervalData = json.load(f)
+        except:
+            self._tuShareProDaysIntervalData = DyStockConfig.defaultTuShareProDaysInterval
 
     def _ok(self):
         # data source
@@ -223,6 +239,23 @@ class DyStockHistDaysDataSourceConfigDlg(QDialog):
         DyStockConfig.configStockTuShareDaysInterval(data)
 
         file = DyStockConfig.getStockTuShareDaysIntervalFileName()
+        with open(file, 'w') as f:
+            f.write(json.dumps(data, indent=4))
+
+        # tusharepro days downloading interval
+        data = {}
+        text = self._tuShareProDaysIntervalLineEdit.text()
+        try:
+            data["interval"] = int(text)
+        except:
+            try:
+                data["interval"] = float(text)
+            except:
+                data = DyStockConfig.defaultTuShareProDaysInterval
+
+        DyStockConfig.configStockTuShareProDaysInterval(data)
+
+        file = DyStockConfig.getStockTuShareProDaysIntervalFileName()
         with open(file, 'w') as f:
             f.write(json.dumps(data, indent=4))
 
