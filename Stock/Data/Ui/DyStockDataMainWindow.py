@@ -312,7 +312,7 @@ class DyStockDataMainWindow(DyBasicMainWindow):
         histDaysMenu.addAction(self._histDaysAutoUpdateAction)
         histDaysMenu.addAction(self._histDaysMannualUpdateAction)
         histDaysMenu.addAction(self._histDaysForcedUpdateAction)
-        histDaysMenu.addAction(self._manualUpdateSectorCodeTableAction)
+        #histDaysMenu.addAction(self._manualUpdateSectorCodeTableAction)
         
         # 添加菜单
         histTicksMenu = menuBar.addMenu('历史分笔')
