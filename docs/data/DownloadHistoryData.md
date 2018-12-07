@@ -36,4 +36,4 @@
 - 由于Wind会对免费账号做限流，所以下载数据最好是一段一段的下载。比如每次下载三个月或者一个月的数据。
 - 历史分笔数据会优先从腾讯下载，如果没有则从通达信下载。通达信的分笔数据没有秒的信息，DevilYuan系统使用随机算法生成秒的信息。
 - 若日线数据和分笔数据下载有缺失，log会分别用抬头￥DyStockDataDaysEngine￥和￥DyStockDataTicksEngine￥标示。用户可以利用此信息，再次下载补全数据。
-- Tushare和TusharePro的股票代码表，交易日数据和日线数据共用数据库的表，如果日线数据下载既使用了TuShare又使用了TuSharePro，会导致数据的不一致性。
+- TuShare和TuSharePro的股票代码表，交易日数据和日线数据共用数据库的表，如果日线数据下载既使用了TuShare又使用了TuSharePro，会导致数据的不一致性。
