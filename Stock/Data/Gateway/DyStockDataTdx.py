@@ -83,6 +83,7 @@ class DyStockDataTdx:
         self._emptyTicksRetry = emptyTicksRetry
 
         self._apis = None
+        self._tickErrorLog = {} # {code: {date: [log]}}
 
     def _getMarketCode(self, code):
         """
@@ -179,42 +180,193 @@ class DyStockDataTdx:
 
         return [x for x in self._apis] # copy it because @self._apis might be changed in function
 
-    def _transform1Min(self, chunk):
+    def _newTick(self, tick, curSec, chunkTime=None):
+        """
+            new tick with second
+        """
+        if chunkTime is None:
+            chunkTime = tick['time']
+
+        newTick = OrderedDict()
+        newTick['time'] = '{}:{}'.format(chunkTime, curSec if curSec >= 10 else ('0' + str(curSec)))
+        newTick['price'] = tick['price']
+        newTick['volume'] = tick['vol']
+        newTick['amount'] = tick['vol']*100*tick['price']
+            
+        # 1--sell 0--buy 2--盘前
+        if tick['buyorsell'] == 0:
+            newTick['type'] = '买盘'
+        elif tick['buyorsell'] == 1:
+            newTick['type'] = '卖盘'
+        else:
+            newTick['type'] = '中性盘'
+
+        return newTick
+
+    def _newAdditionalTicks_22(self, chunk, api, code, date):
+        newChunk = None
+        headTicks = None
+        tailTicks = None
+        chunkTime = chunk[0]['time']
+
+        if chunkTime == '09:30':
+            headTicks = [self._newTick(chunk[0], 3, chunkTime='09:25')]
+            tailTicks = [self._newTick(chunk[-1], 59)]
+            newChunk = chunk[1:-1]
+        elif chunkTime == '11:29':
+            headTicks = []
+            tailTicks = [self._newTick(chunk[-2], 59), self._newTick(chunk[-1], 3, chunkTime='11:30')]
+            newChunk = chunk[:-2]
+        elif chunkTime == '14:59':
+            headTicks = []
+            tailTicks = [self._newTick(chunk[-2], 59), self._newTick(chunk[-1], 3, chunkTime='15:00')]
+            newChunk = chunk[:-2]
+        else:
+            log = 'TDX{}: [{}, {}] minute ticks[{}] from {}:{}: length {} > 21'.format(self._tdxNo, code, date, chunkTime, api.ip, api.port, len(chunk))
+            print(log)
+            self._tickErrorLog.setdefault(code, {}).setdefault(date, []).append(log)
+
+        return newChunk, headTicks, tailTicks
+
+    def _newAdditionalTicks_21(self, chunk, api, code, date):
+        newChunk = None
+        headTicks = None
+        tailTicks = None
+        chunkTime = chunk[0]['time']
+
+        if chunkTime == '09:30':
+            headTicks = [self._newTick(chunk[0], 3, chunkTime='09:25')]
+            tailTicks = []
+            newChunk = chunk[1:]
+        elif chunkTime == '11:29':
+            headTicks = []
+            tailTicks = [self._newTick(chunk[-1], 3, chunkTime='11:30')]
+            newChunk = chunk[:-1]
+        elif chunkTime == '14:59':
+            headTicks = []
+            tailTicks = [self._newTick(chunk[-1], 3, chunkTime='15:00')]
+            newChunk = chunk[:-1]
+        else:
+            headTicks = []
+            tailTicks = [self._newTick(chunk[-1], 59)]
+            newChunk = chunk[:-1]
+
+        return newChunk, headTicks, tailTicks
+
+    def _newAdditionalTicks_le20(self, chunk, api, code, date):
+        """
+            不超过20个tick时，我们需要考虑集合竞价吗？很难做出好的选择。现在是不做考虑。
+            同样我们需要考虑上午和下午收盘吗？
+        """
+        headTicks = []
+        tailTicks = []
+        newChunk = chunk
+
+        if not chunk: # []
+            return newChunk, headTicks, tailTicks 
+
+        # For '11:30' and '15:00', we don't want to randomly assign seconds
+        chunkTime = chunk[0]['time']
+        if chunkTime == '11:30' or chunkTime == '15:00':
+            headTicks = [self._newTick(chunk[0], 3)]
+            tailTicks = []
+            newChunk = []
+            
+        return newChunk, headTicks, tailTicks 
+
+    def _correctChunkByTime(self, chunk, api, code, date):
+        """
+            error correction for chunk according to chunk time
+            @return: new chunk like [orignal tick]
+        """
+        chunkTime = chunk[0]['time']
+
+        if chunkTime < '09:25':
+            log = 'TDX{}: [{}, {}] minute ticks[{}] from {}:{}: length {} > 0'.format(self._tdxNo, code, date, chunkTime, api.ip, api.port, len(chunk))
+            print(log)
+            chunk = []
+        elif chunkTime == '11:30':
+            if len(chunk) > 1:
+                log = 'TDX{}: [{}, {}] minute ticks[{}] from {}:{}: length {} > 1'.format(self._tdxNo, code, date, chunkTime, api.ip, api.port, len(chunk))
+                print(log)
+            chunk = chunk[:1]
+        elif '13:00' > chunkTime > '11:30':
+            log = 'TDX{}: [{}, {}] minute ticks[{}] from {}:{}: length {} > 0'.format(self._tdxNo, code, date, chunkTime, api.ip, api.port, len(chunk))
+            print(log)
+            chunk = []
+        elif chunkTime == '15:00':
+            if len(chunk) > 1:
+                log = 'TDX{}: [{}, {}] minute ticks[{}] from {}:{}: length {} > 1'.format(self._tdxNo, code, date, chunkTime, api.ip, api.port, len(chunk))
+                print(log)
+            chunk = chunk[:1]
+        elif chunkTime > '15:00':
+            log = 'TDX{}: [{}, {}] minute ticks[{}] from {}:{}: length {} > 0'.format(self._tdxNo, code, date, chunkTime, api.ip, api.port, len(chunk))
+            print(log)
+            chunk = []
+
+        return chunk
+
+    def _newAdditionalTicks(self, chunk, api, code, date):
+        """
+            check chunk correct or not, as well as new a chunk with additional ticks
+            @return: new chunk, [head ticks], [tail ticks]
+                     None means error
+        """
+        # check chunk length
+        if len(chunk) > 22:
+            log = 'TDX{}: [{}, {}] minute ticks[{}] from {}:{}: length {} > 22'.format(self._tdxNo, code, date, chunk[0]['time'], api.ip, api.port, len(chunk))
+            print(log)
+            self._tickErrorLog.setdefault(code, {}).setdefault(date, []).append(log)
+        
+            # Is returning None a good way? Or chunk = chunk[:n]?
+            # Currently we think it as error to notify user
+            return None, None, None
+
+        chunk = self._correctChunkByTime(chunk, api, code, date)
+
+        # 超过20个tick时，考虑集合竞价，上午和下午收盘
+        if len(chunk) == 22:
+            newChunk, headTicks, tailTicks = self._newAdditionalTicks_22(chunk, api, code, date)
+        elif len(chunk) == 21:
+            newChunk, headTicks, tailTicks = self._newAdditionalTicks_21(chunk, api, code, date)
+        else:
+            newChunk, headTicks, tailTicks = self._newAdditionalTicks_le20(chunk, api, code, date)
+
+        return newChunk, headTicks, tailTicks
+
+    def _transform1Min(self, chunk, api, code, date):
         """
             randomly scatter ticks in one minute
         """
         if not chunk:
             return []
 
-        if len(chunk) > 60:
+        # analyze chunk
+        chunk, headTicks, tailTicks = self._newAdditionalTicks(chunk, api, code, date)
+        if chunk is None:
             return None
 
+        # new each tick with second
         random.seed()
         newChunk = []
-        curSec = -1
+        cycle = 3 # 3秒一个tick
+        curCycle = -1
+        totalCycleCount = 60//cycle
         for i, tick in enumerate(chunk):
             leftNbr = len(chunk) - i
-            randSize = ((59 - curSec) - leftNbr) + 1
-            assert 60 >= randSize >= 1 and 59 >= curSec + randSize >= 0
+            randSize = ((totalCycleCount - 1 - curCycle) - leftNbr) + 1
+            assert totalCycleCount >= randSize >= 1 and totalCycleCount - 1 >= curCycle + randSize >= 0
 
-            curSec += random.randint(1, randSize)
+            curCycle += random.randint(1, randSize)
+            curSec = curCycle*cycle
 
             # new tick
-            newTick = OrderedDict()
-            newTick['time'] = '{}:{}'.format(tick['time'], curSec if curSec >= 10 else ('0' + str(curSec)))
-            newTick['price'] = tick['price']
-            newTick['volume'] = tick['vol']
-            newTick['amount'] = tick['vol']*100*tick['price']
-            
-            # 1--sell 0--buy 2--盘前
-            if tick['buyorsell'] == 0:
-                newTick['type'] = '买盘'
-            elif tick['buyorsell'] == 1:
-                newTick['type'] = '卖盘'
-            else:
-                newTick['type'] = '中性盘'
+            newTick = self._newTick(tick, curSec)
 
             newChunk.append(newTick)
+
+        # insert back additional ticks
+        newChunk = headTicks + newChunk + tailTicks
 
         return newChunk
 
@@ -225,9 +377,8 @@ class DyStockDataTdx:
         for tick in chunks:
             if time != tick['time']:
                 # transform this chunk
-                newChunk = self._transform1Min(chunk)
+                newChunk = self._transform1Min(chunk, api, code, date)
                 if newChunk is None:
-                    self._info.print('TDX{}: [{}, {}] minute ticks[{}] from {}:{}: length > 60'.format(self._tdxNo, code, date, chunk[0]['time'], api.ip, api.port), DyLogData.warning)
                     return None
 
                 newChunks += newChunk
@@ -239,19 +390,16 @@ class DyStockDataTdx:
                 chunk.append(tick)
 
         # transform the last chunk
-        if chunk:
-            newChunk = self._transform1Min(chunk)
-            if newChunk is None:
-                self._info.print('TDX{}: [{}, {}] minute ticks[{}] from {}:{}: length > 60'.format(self._tdxNo, code, date, chunk[0]['time'], api.ip, api.port), DyLogData.warning)
-                return None
+        newChunk = self._transform1Min(chunk, api, code, date)
+        if newChunk is None:
+            return None
 
-            newChunks += newChunk
+        newChunks += newChunk
 
         return newChunks
 
     def _getTicksOneChunkByApi(self, api, code, date, offset, retry=3):
-        loop = True
-        while loop:
+        for _ in range(3): # We support 3 loop retries
             for _ in range(retry):
                 try:
                     chunk = api.tdxApi.get_history_transaction_data(
@@ -262,15 +410,21 @@ class DyStockDataTdx:
                                                             int(date.replace('-', ''))
                                                             )
                 except Exception as ex:
-                    api.errorCount += 1
-                    print('TDX{}: Exception happended when getting ticks[{}, {}] from {}:{}, {}'.format(self._tdxNo, code, date, api.ip, api.port, ex))
+                    log = 'TDX{}: Exception happended when getting ticks[{}, {}] from {}:{}, {}'.format(self._tdxNo, code, date, api.ip, api.port, ex)
+                    print(log)
+                    self._tickErrorLog.setdefault(code, {}).setdefault(date, []).append(log)
 
+                    api.errorCount += 1
                 else: # successful
                     api.errorCount = 0 # reset
                     return chunk
             else: # error
-                print('TDX{}: {} retries of getting ticks[{}, {}] failed from {}:{}'.format(self._tdxNo, retry, code, date, api.ip, api.port))
-                loop = self._adjustApis(api)
+                log = 'TDX{}: {} retries of getting ticks[{}, {}] failed from {}:{}'.format(self._tdxNo, retry, code, date, api.ip, api.port)
+                print(log)
+                self._tickErrorLog.setdefault(code, {}).setdefault(date, []).append(log)
+
+                if not self._adjustApis(api):
+                    return None
 
         return None
 
@@ -310,18 +464,39 @@ class DyStockDataTdx:
         if newChunks:
             df = api.tdxApi.to_df(newChunks)
         else: # None or empty
+            if newChunks is not None: # log if empty
+                log = 'TDX{}: Get empty ticks[{}, {}] from {}:{}'.format(self._tdxNo, code, date, api.ip, api.port)
+                print(log)
+                self._tickErrorLog.setdefault(code, {}).setdefault(date, []).append(log)
+
             # For None, we just think TDX API can give us the data, but the data is wrong.
             # So we take it as empty DF, so that ticks Engine will not try it again and again.
             # It's not good return value, but keep DevilYuan system not in stuck.
             df = pd.DataFrame(columns=['time', 'price', 'volume', 'amount', 'type'])
 
         return df
+
+    def _processGetTicksResult(self, code, date, df):
+        # We think it's totally failed, now notify user with detailed failures.
+        if df is None or df.empty:
+            logs = self._tickErrorLog.get(code, {}).get(date, [])
+            for log in logs:
+                self._info.print(log, DyLogData.warning)
+
+        # remove corressponding buffered logs
+        try:
+            del self._tickErrorLog[code][date]
+            if not self._tickErrorLog[code]:
+                del self._tickErrorLog[code]
+        except:
+            pass
     
     def getTicks(self, code, date, retry=3, pause=0):
         apis = self._getApis()
         if apis is None:
             return None
 
+        # get from API
         df = None
         for api in apis:
             df = self._getTicksByApi(api, code, date, retry=retry)
@@ -331,7 +506,9 @@ class DyStockDataTdx:
             if df.empty and self._emptyTicksRetry:
                 continue
 
-            return df
+            break
+
+        self._processGetTicksResult(code, date, df)
 
         return df
 
@@ -351,7 +528,7 @@ class DyStockDataTdx:
 
             return False
 
-        def get(market, rule, ):
+        def get(market, rule):
             count = api.tdxApi.get_security_count(market)
 
             chunks = []
