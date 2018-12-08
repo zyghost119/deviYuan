@@ -238,6 +238,15 @@ class DyStockDataTdx:
             else:
                 chunk.append(tick)
 
+        # transform the last chunk
+        if chunk:
+            newChunk = self._transform1Min(chunk)
+            if newChunk is None:
+                self._info.print('TDX{}: [{}, {}] minute ticks[{}] from {}:{}: length > 60'.format(self._tdxNo, code, date, chunk[0]['time'], api.ip, api.port), DyLogData.warning)
+                return None
+
+            newChunks += newChunk
+
         return newChunks
 
     def _getTicksOneChunkByApi(self, api, code, date, offset, retry=3):
