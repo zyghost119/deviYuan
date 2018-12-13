@@ -105,7 +105,7 @@ class DyStockConfig(object):
         return file
 
     def getDefaultHistDaysTuSharePro():
-        return {'TuSharePro': False}
+        return {'TuSharePro': False, 'ShowToken': False}
 
     def _configStockMongoDb():
         file = DyStockConfig.getStockMongoDbFileName()

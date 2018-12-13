@@ -37,7 +37,8 @@ class DyStockHistDaysDataSourceConfigDlg(QDialog):
 
         self._tuShareProCheckBox = QCheckBox('TuSharePro')
 
-        tuShareProTokenLabel = QLabel('TuSharePro token')
+        self._tuShareProTokenPushButton = QPushButton('TuSharePro token')
+        self._tuShareProTokenPushButton.clicked.connect(self._showTuShareProToken)
         self._tuShareProTokenLineEdit = QLineEdit()
 
         description = """默认使用Wind
@@ -76,7 +77,7 @@ class DyStockHistDaysDataSourceConfigDlg(QDialog):
         grid.addWidget(self._windCheckBox, 1, 0)
         grid.addWidget(self._tuShareCheckBox, 2, 0)
         grid.addWidget(self._tuShareProCheckBox, 3, 0)
-        grid.addWidget(tuShareProTokenLabel, 4, 0)
+        grid.addWidget(self._tuShareProTokenPushButton, 4, 0)
         grid.addWidget(self._tuShareProTokenLineEdit, 5, 0)
 
         grid.addWidget(textEdit, 6, 0)
@@ -121,6 +122,10 @@ class DyStockHistDaysDataSourceConfigDlg(QDialog):
 
         if self._tuShareProData.get('Token'):
             self._tuShareProTokenLineEdit.setText(self._tuShareProData.get('Token'))
+
+        if not self._tuShareProData.get('ShowToken'):
+            self._tuShareProTokenPushButton.setText('*TuSharePro token*')
+            self._tuShareProTokenLineEdit.setEchoMode(QLineEdit.Password)
 
         # set according to days source checkbox
         self._tradeDaysComboBox.addItems(list(self.tradeDaysMode))
@@ -208,6 +213,7 @@ class DyStockHistDaysDataSourceConfigDlg(QDialog):
             data['TuSharePro'] = True
 
         data['Token'] = self._tuShareProTokenLineEdit.text()
+        data['ShowToken'] = True if self._tuShareProTokenPushButton.text() == 'TuSharePro token' else False
 
         DyStockConfig.configStockHistDaysTuSharePro(data)
 
@@ -287,3 +293,12 @@ class DyStockHistDaysDataSourceConfigDlg(QDialog):
 
         enable = self._tuShareCheckBox.isChecked()
         self._tuShareProCheckBox.setEnabled(enable)
+
+    def _showTuShareProToken(self):
+        text = self._tuShareProTokenPushButton.text()
+        if text == 'TuSharePro token':
+            self._tuShareProTokenPushButton.setText('*TuSharePro token*')
+            self._tuShareProTokenLineEdit.setEchoMode(QLineEdit.Password)
+        else:
+            self._tuShareProTokenPushButton.setText('TuSharePro token')
+            self._tuShareProTokenLineEdit.setEchoMode(QLineEdit.Normal)
