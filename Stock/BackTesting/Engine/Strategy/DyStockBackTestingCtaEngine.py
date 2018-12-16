@@ -573,21 +573,24 @@ class DyStockBackTestingCtaEngine(object):
             self._info.print('账户管理[{0}]开盘前准备失败'.format(tDay), DyLogData.error)
             return False
 
-        # 设置策略行情过滤器
-        self._strategyMarketFilter.addFilter(self._strategy.onMonitor())
+        if self._strategy.onMonitor() or self._accountManager.onMonitor():
+            # 设置策略行情过滤器
+            self._strategyMarketFilter.addFilter(self._strategy.onMonitor())
 
-        # 得到策略要监控的股票池
-        monitoredCodes = self._strategy.onMonitor() + self._accountManager.onMonitor() + [DyStockCommon.etf300, DyStockCommon.etf500]
-        monitoredCodes = set(monitoredCodes) # 去除重复的股票
-        monitoredCodes -= set(DyStockCommon.indexes.keys()) # 新浪没有指数的Tick数据
-        monitoredCodes = list(monitoredCodes)
+            # 得到策略要监控的股票池
+            monitoredCodes = self._strategy.onMonitor() + self._accountManager.onMonitor() + [DyStockCommon.etf300, DyStockCommon.etf500]
+            monitoredCodes = set(monitoredCodes) # 去除重复的股票
+            monitoredCodes -= set(DyStockCommon.indexes.keys()) # 新浪没有指数的Tick数据
+            monitoredCodes = list(monitoredCodes)
 
-        # 载入监控股票池的回测数据
-        if not self._loadData(monitoredCodes):
-            return False
+            # 载入监控股票池的回测数据
+            if not self._loadData(monitoredCodes):
+                return False
 
-        # 运行回测数据
-        self._runData()
+            # 运行回测数据
+            self._runData()
+        else:
+            self._info.print('策略和账户管理[{}]没有监控的股票'.format(tDay), DyLogData.ind)
 
         # 收盘后的处理
         self._strategy.onClose()
