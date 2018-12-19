@@ -468,7 +468,11 @@ class DyStockDataGateway(object):
         try:
             # 以无复权方式从腾讯获取OHCLV，成交量是手（整数化过）
             # 此接口支持ETF日线数据
-            df = ts.get_k_data(tuShareCode, startDate, endDate, autype=None, pause=sleepTime).sort_index()
+            df = ts.get_k_data(tuShareCode, startDate, endDate, autype=None, pause=sleepTime)
+            if df is None or df.empty: # If no data, TuShare return None
+                df = pd.DataFrame(columns=['date', 'open', 'high', 'close', 'low', 'volume'])
+            else:
+                df = df.sort_index()
         except Exception as ex:
             self._info.print("从TuShare获取{}({})日线数据[{}, {}]失败: {}".format(code, name, startDate, endDate, ex), DyLogData.error)
             return None
