@@ -87,7 +87,7 @@ class DyStockDataWind(object):
 
             data = self._gateway.start()
             if data.ErrorCode != 0:
-                self._info.print("登录Wind失败", DyLogData.error)
+                self._info.print("登录Wind失败: ErrorCode={}, Data={}".format(data.ErrorCode, data.Data), DyLogData.error)
                 return False
 
             self._info.print("登录Wind成功")
