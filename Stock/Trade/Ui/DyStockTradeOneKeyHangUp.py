@@ -7,6 +7,7 @@ import tushare as ts
 from EventEngine.DyEvent import *
 from DyCommon.DyCommon import *
 from DyCommon.DyScheduler import DyScheduler
+from Stock.Common.DyStockCommon import DyStockCommon
 
 
 class DyStockTradeOneKeyHangUp(object):
@@ -56,6 +57,18 @@ class DyStockTradeOneKeyHangUp(object):
             self._eventEngine.put(DyEvent(DyEventType.endStockTradeDay))
 
     def _setTradeDays(self, startDate):
+        ret = False
+        if DyStockCommon.tuShareProToken: # prefer TuSharePro firstly
+            ret = self._setTradeDaysViaTuSharePro(startDate)
+
+        if not ret:
+            ret = self._setTradeDaysViaTuShare(startDate)
+
+        return ret
+
+    def _setTradeDaysViaTuShare(self, startDate):
+        print("TuShare: 获取交易日数据[{}]".format(startDate))
+
         try:
             df = ts.trade_cal()
 
@@ -73,6 +86,34 @@ class DyStockTradeOneKeyHangUp(object):
 
         except Exception as ex:
             self._info.print("一键挂机: 从TuShare获取交易日[{}]数据异常: {}".format(startDate, str(ex)), DyLogData.warning)
+            return False
+
+        return True
+
+    def _setTradeDaysViaTuSharePro(self, startDate):
+        print("TuSharePro: 获取交易日数据[{}]".format(startDate))
+
+        ts.set_token(DyStockCommon.tuShareProToken)
+        pro = ts.pro_api()
+
+        proStartDate = startDate.replace('-', '')
+        try:
+            df = pro.trade_cal(exchange='', start_date=proStartDate)
+
+            df = df.set_index('cal_date')
+            df = df[proStartDate:]
+
+            # get trade days
+            dates = DyTime.getDates(startDate, df.index[-1][:4] + '-' + df.index[-1][4:6] + '-' + df.index[-1][6:], strFormat=True)
+            self._tradeDays = {}
+            for date in dates:
+                if df.loc[date.replace('-', ''), 'is_open'] == 1:
+                    self._tradeDays[date] = True
+                else:
+                    self._tradeDays[date] = False
+
+        except Exception as ex:
+            self._info.print("一键挂机: 从TuSharePro获取交易日[{}]数据异常: {}".format(startDate, ex), DyLogData.warning)
             return False
 
         return True
