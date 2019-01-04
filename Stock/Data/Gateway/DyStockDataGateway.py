@@ -79,6 +79,50 @@ class DyStockDataGateway(object):
             
         return None
 
+    def _getTradeDaysFromTuSharePro(self, startDate, endDate):
+        self._startTuSharePro()
+
+        print("TuSharePro: 获取交易日数据[{} ~ {}]".format(startDate, endDate))
+
+        proStartDate = startDate.replace('-', '')
+        proEndDate = endDate.replace('-', '')
+
+        lastEx = None
+        retry = 3
+        for _ in range(retry):
+            try:
+                df = self._tuSharePro.trade_cal(exchange='', start_date=proStartDate, end_date=proEndDate)
+
+                df = df.set_index('cal_date')
+                df = df[proStartDate:proEndDate]
+                dfDict = df.to_dict()
+
+                # get trade days
+                dates = DyTime.getDates(startDate, endDate, strFormat=True)
+                tDays = []
+                for date in dates:
+                    if dfDict['is_open'][date.replace('-', '')] == 1:
+                        tDays.append(date)
+
+                return tDays
+            except Exception as ex:
+                lastEx = ex
+                print("TuSharePro: 获取交易日数据[{} ~ {}]异常: {}, retrying...".format(startDate, endDate, ex))
+                sleep(1)
+
+        self._info.print("TuSharePro: 获取交易日数据[{} ~ {}]异常: {}, retried {} times".format(startDate, endDate, lastEx, retry), DyLogData.error)
+        return None
+
+    def _getTradeDaysFromTuShareOrPro(self, startDate, endDate):
+        tDays = None
+        if DyStockCommon.tuShareProToken: # prefer TuSharePro firstly
+            tDays = self._getTradeDaysFromTuSharePro(startDate, endDate)
+
+        if tDays is None:
+            tDays = self._getTradeDaysFromTuShare(startDate, endDate)
+
+        return tDays
+
     def _determineTradeDays(self, windTradeDays, tuShareTradeDays):
         def _errorResult():
             if self.tradeDaysMode == "Verify":
@@ -110,8 +154,8 @@ class DyStockDataGateway(object):
             windTradeDays = self._wind.getTradeDays(startDate, endDate)
             tradeDays = windTradeDays
 
-        # always get from TuShare
-        tuShareTradeDays = self._getTradeDaysFromTuShare(startDate, endDate)
+        # always get from TuShare or TuSharePro
+        tuShareTradeDays = self._getTradeDaysFromTuShareOrPro(startDate, endDate)
         tradeDays = tuShareTradeDays
 
         # verify
