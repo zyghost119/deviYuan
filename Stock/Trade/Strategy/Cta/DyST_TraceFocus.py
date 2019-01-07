@@ -1303,15 +1303,22 @@ class DyST_TraceFocus(DyStockCtaTemplate):
         conceptsTemp = df.values.tolist()
     
         # 概念股列表
+        sleepTime = 1
         for i, (conceptCode, conceptName, _) in enumerate(conceptsTemp, 1):
             # get from tusharepro
             for _ in range(3):
-                sleep(1)
+                sleep(sleepTime)
                 print("TuSharePro: 获取概念[{}]...({}/{})".format(conceptName, i, len(conceptsTemp)))
                 try:
                     df = pro.concept_detail(id=conceptCode, fields='ts_code')
                 except Exception as ex:
-                    print('TuSharePro: 获取概念异常: {}, retry...'.format(ex))
+                    exStr = 'TuSharePro: 获取概念异常: {}, retry...'.format(ex)
+                    print(exStr)
+                    if '最多访问' in exStr:
+                        # Here we don't analyze accurately, just think limitation happened like "每分钟最多访问该接口60次"
+                        sleepTime += 0.2
+                        print('TuSharePro: Sleep 60s, and then retry with @sleepTime={} ...'.format(sleepTime))
+                        sleep(60)
                 else:
                     break
             else:
