@@ -367,7 +367,8 @@ class DyStockDataTicksEngine(object):
             try:
                 # retry 3 times
                 df = func(DyStockCommon.etf50, tdays[mid], retry=3, pause=pause)
-            except:
+            except Exception as ex:
+                self._info.print('{}异常: {}'.format(func.__name__, ex), DyLogData.warning)
                 return None
 
             self._progress.update()
