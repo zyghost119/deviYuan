@@ -28,7 +28,7 @@ class DyStockBackTestingMainEngine(object):
         pass
 
     def setThreadMode(self):
-        self._strategyEngine.setThreadMode(threadMode)
+        self._strategyEngine.setThreadMode()
 
     def setProcessMode(self, mode):
         self._strategyEngine.setProcessMode(mode)
