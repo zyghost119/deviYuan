@@ -415,6 +415,10 @@ class DyStockDataDaysEngine(object):
         return self._commonEngine.getCode(name)
 
     @property
+    def eventEngine(self):
+        return self._eventEngine
+
+    @property
     def shIndex(self):
         return self._commonEngine.shIndex
 

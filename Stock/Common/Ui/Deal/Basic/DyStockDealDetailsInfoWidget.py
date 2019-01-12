@@ -1,5 +1,9 @@
+from PyQt5.QtWidgets import QMessageBox
 
-from DyCommon.Ui.DyTableWidget import *
+from DyCommon.DyCommon import DyErrorInfo
+from Stock.Data.Engine.DyStockDataEngine import DyStockDataEngine
+from DyCommon.Ui.DyTableWidget import DyTableWidget
+from Stock.Common.DyStockCommon import DyStockCommon
 
 
 class DyStockDealDetailsInfoWidget(DyTableWidget):
@@ -22,7 +26,8 @@ class DyStockDealDetailsInfoWidget(DyTableWidget):
 
         self._code = code
         day = self._daysEngine.codeTDayOffset(code, date, n)
-        if day is None: return
+        if day is None:
+            return
 
         self._day = day
 
@@ -41,12 +46,29 @@ class DyStockDealDetailsInfoWidget(DyTableWidget):
         index = self._daysEngine.getIndex(code)
         indexDf = self._daysEngine.getDataFrame(index)
 
-        # get previous close
+        # get previous close of index
+        preCloseIndex = None
         preTDay = self._daysEngine.tDaysOffset(self._day, -1)
-        preCloseIndex = indexDf.ix[preTDay, 'close']
+        try:
+            preCloseIndex = indexDf.ix[preTDay, 'close']
+        except: # 如果出现停牌，对应的指数的前一日是缺失的，所以需要重新载入指数日线数据
+            errorInfo = DyErrorInfo(self._daysEngine.eventEngine)
+            errorDataEngine = DyStockDataEngine(self._daysEngine.eventEngine, errorInfo, registerEvent=False)
+            if not errorDataEngine.daysEngine.load([self._day, -1], latestAdjFactorInDb=False, codes=[]):
+                return
 
-        # 获取当日数据
-        closeIndex = indexDf.ix[self._day, 'close']
+            errorIndexDf = errorDataEngine.daysEngine.getDataFrame(index)
+            try:
+                preCloseIndex = errorIndexDf.ix[preTDay, 'close']
+            except: # 免费的Wind的数据质量不咋地
+                QMessageBox.warning(self, '警告', '{}({}){}日线数据缺失!'.format(index, DyStockCommon.indexes[index], preTDay))
+
+        # 获取指数的当日数据
+        closeIndex = None
+        try:
+            closeIndex = indexDf.ix[self._day, 'close']
+        except:
+            QMessageBox.warning(self, '警告', '{}({}){}日线数据缺失!'.format(index, DyStockCommon.indexes[index], self._day))
 
         row = [self._day,
                code,
@@ -56,7 +78,7 @@ class DyStockDealDetailsInfoWidget(DyTableWidget):
                turn,
                self._daysEngine.stockAllCodesFunds[index],
                closeIndex,
-               (closeIndex - preCloseIndex)*100/preCloseIndex
+               (closeIndex - preCloseIndex)*100/preCloseIndex if closeIndex is not None and preCloseIndex else None
               ]
 
         self.appendRow(row, True)
