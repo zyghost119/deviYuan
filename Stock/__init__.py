@@ -13,10 +13,8 @@ import os
 import importlib
 
 
-DyStockTradeStrategyClsMap = {}
-
 # dynamically load strategies from specific package, like 'Stock.Trade.Strategy'
-def __loadStrategies(dir, packageCommonPrefix, onlyDir=True):
+def __loadStrategies(dir, packageCommonPrefix, strategyClsMap, onlyDir=True):
     fields = []
     for root, dirs, files in os.walk(dir):
         for dirName in dirs:
@@ -27,7 +25,7 @@ def __loadStrategies(dir, packageCommonPrefix, onlyDir=True):
             fields.append(dirFields)
 
             dirFields.append(dirName)
-            retFields = __loadStrategies(os.path.sep.join([dir, dirName]), packageCommonPrefix, onlyDir=False)
+            retFields = __loadStrategies(os.path.sep.join([dir, dirName]), packageCommonPrefix, strategyClsMap, onlyDir=False)
             if retFields:
                 dirFields.append(retFields)
 
@@ -45,7 +43,7 @@ def __loadStrategies(dir, packageCommonPrefix, onlyDir=True):
                 strategyClsName = file[:-3]
                 strategyCls = module.__getattribute__(strategyClsName)
 
-                DyStockTradeStrategyClsMap[strategyClsName] = strategyCls
+                strategyClsMap[strategyClsName] = strategyCls
 
                 fields.append([strategyCls]) # strategy class
 
@@ -53,5 +51,8 @@ def __loadStrategies(dir, packageCommonPrefix, onlyDir=True):
 
     return fields
 
-def DynamicLoadStrategyFields(dir, packageCommonPrefix):
-    return __loadStrategies(dir, packageCommonPrefix, onlyDir=True)
+def DynamicLoadStrategyFields(dir, packageCommonPrefix, strategyClsMap):
+    """
+        @strategyClsMap: {strategy class name: strategy class}, out parameter
+    """
+    return __loadStrategies(dir, packageCommonPrefix, strategyClsMap, onlyDir=True)

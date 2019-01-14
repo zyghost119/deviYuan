@@ -7,4 +7,5 @@ from Stock import DynamicLoadStrategyFields
 __pathList = os.path.dirname(__file__).split(os.path.sep)
 __stratgyPath = os.path.sep.join(__pathList[:-2] + ['Strategy'])
 
-DyStockTradeStrategyWidgetAutoFields = DynamicLoadStrategyFields(__stratgyPath, 'Stock.Trade.Strategy')
+DyStockTradeStrategyClsMap = {}
+DyStockTradeStrategyWidgetAutoFields = DynamicLoadStrategyFields(__stratgyPath, 'Stock.Trade.Strategy', DyStockTradeStrategyClsMap)

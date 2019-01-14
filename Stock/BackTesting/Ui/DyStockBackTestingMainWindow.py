@@ -12,7 +12,7 @@ from ..Engine.DyStockBackTestingMainEngine import *
 from ...Select.Ui.Other.DyStockSelectTestedStocksDlg import *
 from ...Common.Ui.DyStockMaViewerIndicatorMenu import *
 from .Other.DyStockBackTestingSettingDlg import *
-from Stock import DyStockTradeStrategyClsMap
+from Stock.Trade.Ui.Basic import DyStockTradeStrategyClsMap
 
 
 class DyStockBackTestingMainWindow(DyBasicMainWindow):
