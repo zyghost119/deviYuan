@@ -424,6 +424,30 @@ class ThsClientTrader(IClientTrader):
             .window_text()
         )
 
+    def get_code_type(self, code):
+        """
+        判断代码是属于那种类型，目前仅支持 ['fund', 'stock']
+        :return str 返回code类型, fund 基金 stock 股票
+        """
+        if code.startswith(("00", "30", "60")):
+            return "stock"
+        return "fund"
+
+    def round_price_by_code(self, price, code):
+        """
+        根据代码类型[股票，基金] 截取制定位数的价格
+        :param price: 证券价格
+        :param code: 证券代码
+        :return: str 截断后的价格的字符串表示
+        """
+        if isinstance(price, str):
+            return price
+
+        typ = self.get_code_type(code)
+        if typ == "fund":
+            return "{:.3f}".format(price)
+        return "{:.2f}".format(price)
+
     def _set_trade_params(self, security, price, amount):
         code = security[-6:]
 
@@ -434,7 +458,7 @@ class ThsClientTrader(IClientTrader):
 
         self._type_keys(
             self._config.TRADE_PRICE_CONTROL_ID,
-            easyutils.round_price_by_code(price, code),
+            self.round_price_by_code(price, code),
         )
         self._type_keys(self._config.TRADE_AMOUNT_CONTROL_ID, str(int(amount)))
 
@@ -501,6 +525,12 @@ class ThsClientTrader(IClientTrader):
             title = self._get_pop_dialog_title()
 
             result = handler.handle(title)
+            # moyuanz:
+            # Here's one assumption that if pop dialog indicates errors with title '提示信息'
+            # and then a new dialog should be popped with title '提示', which eventually raise exception to indicate action failed.
+            # If no pop dialog with tile '提示', which makes this action return {"message": "success"}.
+            #
+            # I'm not sure if above assumption valid or not? Currently I think shidenggui gives correct implementation.
             if result:
                 return result
         return {"message": "success"}

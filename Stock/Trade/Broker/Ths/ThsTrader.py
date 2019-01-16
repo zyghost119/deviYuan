@@ -155,9 +155,10 @@ class ThsTrader(UiTrader):
     def buy(self, code, name, price, volume):
         try:
             ret = self._uiClient.buy(code[:6], price, volume)
-            if ret is None:
+            if ret is None: # From current implementation, None isn't returned.
                 return False
-        except:
+        except Exception as ex:
+            self._info.print('同花顺: 买入, {}[{}], {}股, 价格{}: 失败: {}'.format(code, name, volume, price, ex), DyLogData.error)
             return False
 
         return True
@@ -166,9 +167,10 @@ class ThsTrader(UiTrader):
     def sell(self, code, name, price, volume):
         try:
             ret = self._uiClient.sell(code[:6], price, volume)
-            if ret is None:
+            if ret is None: # From current implementation, None isn't returned.
                 return False
-        except:
+        except Exception as ex:
+            self._info.print('同花顺: 卖出, {}[{}], {}股, 价格{}: 失败: {}'.format(code, name, volume, price, ex), DyLogData.error)
             return False
 
         return True
