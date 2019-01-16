@@ -527,8 +527,8 @@ class ThsClientTrader(IClientTrader):
             result = handler.handle(title)
             # moyuanz:
             # Here's one assumption that if pop dialog indicates errors with title '提示信息'
-            # and then a new dialog should be popped with title '提示', which eventually raise exception to indicate action failed.
-            # If no pop dialog with tile '提示', which makes this action return {"message": "success"}.
+            # and then a new dialog should be popped with title '提示', which eventually raises exception to indicate this action failed.
+            # If no pop dialog with title '提示', it makes this action return {"message": "success"}.
             #
             # I'm not sure if above assumption valid or not? Currently I think shidenggui gives correct implementation.
             if result:
