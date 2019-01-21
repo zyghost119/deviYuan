@@ -15,6 +15,7 @@ class DyStockAccountManager:
         实盘股票账户管理，主要对接券商接口。
         根据情况，从券商接口同步可用资金和持仓信息
         从风控和简化处理角度，禁止不同策略同一时间同一只股票相同委托类型的委托。成交的委托不在考虑之内。
+        由参数@buySellMatchedByBrokerEntrustId控制是否禁止。
 
         !!!由于持仓，委托对象可能会被多线程读写，所以事件引擎里传递的此类对象一定要copy。
         成交对象由于生成后不会改变，则无需copy。
@@ -34,6 +35,11 @@ class DyStockAccountManager:
     brokerName = None
 
     riskGuardNbr = 5 # 暂时没有启用此功能
+
+    # 策略的买入卖出交易根据券商的委托号匹配。必须要符合下面的条件此参数才可以设成True：
+    #   券商的买入卖出接口支持直接返回委托号
+    #   券商的成交单含有对应的委托号
+    buySellMatchedByBrokerEntrustId = False
 
 
     def __init__(self, eventEngine, info):
@@ -228,20 +234,34 @@ class DyStockAccountManager:
         # save to disk
         self._save()
 
+    def _canNewEntrust(self, type, datetime, strategyCls, code, name, price, volume):
+        if self.buySellMatchedByBrokerEntrustId:
+            return True
+
+        # check if there's same code and type of entrust not done for different strategy
+        entrusts = self._curEntrusts.get(code)
+        if entrusts is None:
+            return True
+        
+        for entrust in entrusts:
+            if (not entrust.isDone()) and entrust.type == type and entrust.strategyCls != strategyCls:
+                errStr = '{}: 策略[{}]委托失败({}, {}, {}, 价格={}, 数量={}): 策略[{}]有未完成的委托'.format(
+                    self.__class__.__name__, strategyCls.chName,
+                    code, name, type, price, volume,
+                    entrust.strategyCls.chName
+                )
+                self._info.print(errStr, DyLogData.error)
+                                                                                                            
+                return False
+
+        return True
+
     def _newEntrust(self, type, datetime, strategyCls, code, name, price, volume):
         """
             生成新的委托，并向交易接口发送委托事件
         """
-        # check if there's same code and type of entrust not done for different strategy
-        entrusts = self._curEntrusts.get(code)
-        if entrusts is not None:
-            for entrust in entrusts:
-                if (not entrust.isDone()) and entrust.type == type and entrust.strategyCls != strategyCls:
-                    self._info.print('{}: 策略[{}]委托失败({}, {}, {}, 价格={}, 数量={}): 策略[{}]有未完成的委托'.format(self.__class__.__name__, strategyCls.chName,
-                                                                                                   code, name, type, price, volume,
-                                                                                                   entrust.strategyCls.chName), DyLogData.warning)
-                                                                                                               
-                    return None
+        if not self._canNewEntrust(type, datetime, strategyCls, code, name, price, volume):
+            return None
 
         # create a new entrust
         curEntrustCount = self.newCurEntrustCount()
