@@ -112,7 +112,11 @@ class DyEventType:
     stockPositionUpdate = 'eStockPositionUpdate_' # 账户持仓更新事件 + broker
     stockCurEntrustsUpdate = 'eStockCurEntrustsUpdate_' # 账户当日委托更新事件 + broker
     stockCurDealsUpdate = 'eStockCurDealsUpdate_' # 账户当日成交更新事件 + broker
-    stockEntrustUpdate = 'eStockEntrustUpdate_' # 账户单个委托更新事件 + broker, 如果网络或者其他什么原因，可能会导致委托无法挂到券商，这时用此事件通知
+    stockEntrustUpdate = 'eStockEntrustUpdate_' # 账户单个委托更新事件 + broker, 
+                                                # 如果网络或者其他什么原因，可能会导致委托无法挂到券商，这时用此事件通知。
+                                                # 更新如下参数：
+                                                #   委托状态
+                                                #   券商委托号
 
     # 主要为了UI的更新
     stockCapitalTickUpdate = 'eStockCapitalTickUpdate_' # 账户资金状况每Tick更新事件 + broker(English name)

@@ -470,6 +470,11 @@ class DyStockAccountManager:
 
     @curWorkingCancelEntrustsWrapper
     def _stockEntrustUpdateHandler(self, event):
+        """
+            update below parameters for one entrust from broker:
+                - status
+                - brokerEntrustId
+        """
         updatedEntrust = event.data
 
         entrusts = self._curEntrusts.get(updatedEntrust.code)
@@ -480,15 +485,21 @@ class DyStockAccountManager:
             if entrust.dyEntrustId != updatedEntrust.dyEntrustId:
                 continue
 
-            if entrust.status == updatedEntrust.status:
-                break
+            isUpdated = False
+            if entrust.status != updatedEntrust.status:
+                entrust.status = updatedEntrust.status
+                isUpdated = True
 
-            entrust.status = updatedEntrust.status
+            if entrust.brokerEntrustId != updatedEntrust.brokerEntrustId:
+                entrust.brokerEntrustId = updatedEntrust.brokerEntrustId
+                isUpdated = True
 
-            event = DyEvent(DyEventType.stockOnEntrust)
-            event.data = [copy.copy(entrust)]
+            if isUpdated: # @isUpdated should be True
+                event = DyEvent(DyEventType.stockOnEntrust)
+                event.data = [copy.copy(entrust)]
 
-            self._eventEngine.put(event)
+                self._eventEngine.put(event)
+
             break
 
     def _stockCapitalUpdateHandler(self, event):

@@ -207,10 +207,23 @@ class DyTrader(object):
 
         self._eventEngine.unregister(DyEventType.stockMarketTicks, self._stockMarketTicksHandler, DyStockTradeEventHandType.brokerEngine)
 
+    def _updateEntrustWithBrokerEntrustId(self, entrust, brokerEntrustId):
+        entrust = copy.copy(entrust)
+        entrust.brokerEntrustId = brokerEntrustId
+
+        event = DyEvent(DyEventType.stockEntrustUpdate + self.broker)
+        event.data = entrust
+
+        self._eventEngine.put(event)
+
     def _stockBuyHandler(self, event):
         entrust = event.data
 
-        if self.buy(entrust.code, entrust.name, entrust.price, entrust.totalVolume):
+        ret = self.buy(entrust.code, entrust.name, entrust.price, entrust.totalVolume)
+        if ret: # success
+            if ret is not True: # success with broker entrust ID
+                self._updateEntrustWithBrokerEntrustId(entrust, ret)
+
             self._postfixEntrustAction()
         else:
             self._discardEntrust(entrust)
@@ -220,7 +233,11 @@ class DyTrader(object):
     def _stockSellHandler(self, event):
         entrust = event.data
 
-        if self.sell(entrust.code, entrust.name, entrust.price, entrust.totalVolume):
+        ret = self.sell(entrust.code, entrust.name, entrust.price, entrust.totalVolume)
+        if ret: # success
+            if ret is not True: # success with broker entrust ID
+                self._updateEntrustWithBrokerEntrustId(entrust, ret)
+
             self._postfixEntrustAction()
         else:
             self._discardEntrust(entrust)
@@ -535,3 +552,19 @@ class DyTrader(object):
                 allDone = False
 
         return stateChange, allDone
+
+    def buy(self, code, name, price, volume):
+        """
+            @return: True - success without broker entrust ID
+                     False - failed
+                     broker entrust ID - success with broker entrust ID
+        """
+        raise NotImplementedError
+
+    def sell(self, code, name, price, volume):
+        """
+            @return: True - success without broker entrust ID
+                     False - failed
+                     broker entrust ID - success with broker entrust ID
+        """
+        raise NotImplementedError
