@@ -884,7 +884,7 @@ class DyStockTableWidget(DyStatsTableWidget):
         defaultFileName = defaultFileName.format(self.getUniqueName())
 
         defaultDir = DyCommon.createPath('Stock/User/Save/Strategy/同花顺')
-        fileName, _ = QFileDialog.getSaveFileName(self, '导出到同花顺', os.path.join(defaultDir, defaultFileName), "同花顺files (*.sel);;all files(*.*)")
+        fileName, _ = QFileDialog.getSaveFileName(None, '导出到同花顺', os.path.join(defaultDir, defaultFileName), "同花顺files (*.sel);;all files(*.*)", options=QFileDialog.DontUseNativeDialog)
         if fileName:
             self.export2Jqka(fileName)
 
@@ -897,7 +897,7 @@ class DyStockTableWidget(DyStatsTableWidget):
         defaultFileName = defaultFileName.format(self.getUniqueName())
 
         defaultDir = DyCommon.createPath('Stock/User/Save/Strategy')
-        fileName, _ = QFileDialog.getSaveFileName(self, '保存股票表', os.path.join(defaultDir, defaultFileName), "JSON files (*.json);;all files(*.*)")
+        fileName, _ = QFileDialog.getSaveFileName(None, '保存股票表', os.path.join(defaultDir, defaultFileName), "JSON files (*.json);;all files(*.*)", options=QFileDialog.DontUseNativeDialog)
         if fileName:
             self._saveAs(fileName, data['all'])
 
