@@ -57,6 +57,17 @@ class DyStockDataGateway(object):
         # new DyStockDataTicksGateway instance for each ticks hand to avoid mutex
         self._ticksGateways = [DyStockDataTicksGateway(self._eventEngine, self._info, i) for i in range(DyStockDataEventHandType.stockHistTicksHandNbr)]
 
+    def _windCheckWrapper(func):
+        def wrapper(self, *args, **kwargs):
+            if 'Wind' in DyStockCommon.defaultHistDaysDataSource:
+                if self._wind is None:
+                    self._info.print("没有安装WindPy", DyLogData.error)
+                    return None
+
+            return func(self, *args, **kwargs)
+
+        return wrapper
+
     def _getTradeDaysFromTuShare(self, startDate, endDate):
         try:
             df = ts.trade_cal()
@@ -145,6 +156,7 @@ class DyStockDataGateway(object):
 
         return windTradeDays # same
 
+    @_windCheckWrapper
     def getTradeDays(self, startDate, endDate):
         """
             Wind可能出现数据错误，所以需要从其他数据源做验证
@@ -164,16 +176,13 @@ class DyStockDataGateway(object):
 
         return tradeDays
 
+    @_windCheckWrapper
     def getStockCodes(self):
         """
             获取股票代码表
         """
         # from Wind
         if 'Wind' in DyStockCommon.defaultHistDaysDataSource:
-            if self._wind is None:
-                self._info.print("没有安装WindPy", DyLogData.error)
-                return None
-
             windCodes = self._wind.getStockCodes()
             codes = windCodes
 
@@ -196,9 +205,11 @@ class DyStockDataGateway(object):
 
         return codes
 
+    @_windCheckWrapper
     def getSectorStockCodes(self, sectorCode, startDate, endDate):
         return self._wind.getSectorStockCodes(sectorCode, startDate, endDate)
 
+    @_windCheckWrapper
     def getDays(self, code, startDate, endDate, fields, name=None):
         """
             获取股票日线数据
