@@ -160,7 +160,7 @@ class DyStockSelectMainWindow(DyBasicMainWindow):
 
     def _openStrategySelectResultAct(self):
         defaultDir = DyCommon.createPath('Stock/User/Save/Strategy/选股')
-        fileName, _ = QFileDialog.getOpenFileName(None, "打开策略选股/回归结果", defaultDir, "JSON files (*.json)")
+        fileName, _ = QFileDialog.getOpenFileName(None, "打开策略选股/回归结果", defaultDir, "JSON files (*.json)", options=QFileDialog.DontUseNativeDialog)
 
         # open
         try:
