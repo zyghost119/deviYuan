@@ -97,7 +97,9 @@ DevilYuan股票量化系统由python编写，支持python3.4及以上版本，�
 # 安装Q&A
 - pip install
     - **Q**: `pip install`报如下错误
-        - pip is configured with locations that require TLS/SSL, however the ssl module in Python is not available.
+    ```
+    pip is configured with locations that require TLS/SSL, however the ssl module in Python is not available.
+    ```
     - **A**: 请到Windows开始菜单里，找到对应的Anaconda Prompt。然后在Anaconda Prompt里，执行pip
 
 # 运行
