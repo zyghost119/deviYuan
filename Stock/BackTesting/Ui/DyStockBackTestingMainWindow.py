@@ -163,7 +163,7 @@ class DyStockBackTestingMainWindow(DyBasicMainWindow):
 
     def _openBackTestingStrategyResultDealsAct(self):
         defaultDir = DyCommon.createPath('Stock/User/Save/Strategy/股票策略回测')
-        fileName, _ = QFileDialog.getOpenFileName(self, "打开策略回测成交结果...", defaultDir, "JSON files (*.json)")
+        fileName, _ = QFileDialog.getOpenFileName(None, "打开策略回测成交结果...", defaultDir, "JSON files (*.json)")
 
         # open
         try:
