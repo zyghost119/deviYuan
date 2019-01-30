@@ -92,6 +92,7 @@ class DyStockBackTestingCtaEngine(object):
 
         self._curTicks = {} # 当日监控股票的当日所有ticks, {code: {time: DyStockCtaTickData}}
         self._curLatestTicks = {} # 当日监控股票的当日最新tick, {code: DyStockCtaTickData}
+        self._curTicksBitmap = {} # 当日监控股票是否有ticks的位图, {time: True}
 
         self._curBars = {} # 当日监控股票的当日所有Bars, 日内{code: {time: DyStockCtaBarData}}，日线{code: DyStockCtaBarData}
 
@@ -185,6 +186,8 @@ class DyStockBackTestingCtaEngine(object):
                 # set
                 ticks[tick.time] = tick
 
+                self._curTicksBitmap.setdefault(tick.time, True)
+
             self._curTicks[code] = ticks
 
             count += 1
@@ -206,6 +209,9 @@ class DyStockBackTestingCtaEngine(object):
             获取推送到策略的Ticks
         """
         time = '{0}:{1}:{2}'.format(h if h > 9 else ('0' + str(h)), m if m > 9 else ('0' + str(m)), s if s > 9 else ('0' + str(s)))
+
+        if not self._curTicksBitmap.get(time):
+            return {}
 
         ticks = {}
         for code in self._curTicks:
