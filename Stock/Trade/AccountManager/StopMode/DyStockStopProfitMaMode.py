@@ -67,7 +67,7 @@ class DyStockStopProfitMaMode(DyStockStopMode):
         pos = self._accountManager.curPos[code]
 
         if pos.maxPnlRatio > self.profitRunningPnlRatio and tick.price < ma:
-            self._accountManager.closePos(tick.datetime, code, getattr(tick, DyStockTradeCommon.sellPrice), DyStockSellReason.stopProfit)
+            self._accountManager.closePos(tick.datetime, code, getattr(tick, DyStockTradeCommon.sellPrice), DyStockSellReason.stopProfit, tickOrBar=tick)
 
     def onTicks(self, ticks):
         for code, pos in self._accountManager.curPos.items():

@@ -67,7 +67,7 @@ class DyStockStopLossMaMode(DyStockStopMode):
         pos = self._accountManager.curPos[code]
 
         if tick.price < ma and pos.pnlRatio < self.stopLossPnlRatio:
-            self._accountManager.closePos(tick.datetime, code, getattr(tick, DyStockTradeCommon.sellPrice), DyStockSellReason.stopLoss)
+            self._accountManager.closePos(tick.datetime, code, getattr(tick, DyStockTradeCommon.sellPrice), DyStockSellReason.stopLoss, tickOrBar=tick)
 
     def onTicks(self, ticks):
         for code, pos in self._accountManager.curPos.items():

@@ -22,7 +22,7 @@ class DyStockStopTimeMode(DyStockStopMode):
 
             if pos.holdingPeriod >= self._dayNbr:
                 if pos.pnlRatio >= self._pnlRatio:
-                    self._accountManager.closePos(tick.datetime, code, getattr(tick, DyStockTradeCommon.sellPrice), DyStockSellReason.stopTime)
+                    self._accountManager.closePos(tick.datetime, code, getattr(tick, DyStockTradeCommon.sellPrice), DyStockSellReason.stopTime, tickOrBar=tick)
 
     def onBars(self, bars):
         self.onTicks(bars)

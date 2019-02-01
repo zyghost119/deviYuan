@@ -39,7 +39,7 @@ class DyStockStopLossStepMode(DyStockStopMode):
             currSL = self._initSLM * (1 + self._increment)**int((math.log(pos.high/pos.cost)/math.log(1 + self._step)))
 
             if tick.price < pos.cost*currSL:
-                self._accountManager.closePos(tick.datetime, code, getattr(tick, DyStockTradeCommon.sellPrice), DyStockSellReason.stopLossStep)
+                self._accountManager.closePos(tick.datetime, code, getattr(tick, DyStockTradeCommon.sellPrice), DyStockSellReason.stopLossStep, tickOrBar=tick)
 
     def onBars(self, bars):
         self.onTicks(bars)

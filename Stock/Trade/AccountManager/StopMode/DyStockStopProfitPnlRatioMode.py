@@ -16,7 +16,7 @@ class DyStockStopProfitPnlRatioMode(DyStockStopMode):
                 continue
 
             if pos.pnlRatio >= self._pnlRatio:
-                self._accountManager.closePos(tick.datetime, code, getattr(tick, DyStockTradeCommon.sellPrice), DyStockSellReason.stopProfit)
+                self._accountManager.closePos(tick.datetime, code, getattr(tick, DyStockTradeCommon.sellPrice), DyStockSellReason.stopProfit, tickOrBar=tick)
 
     def onBars(self, bars):
         self.onTicks(bars)
