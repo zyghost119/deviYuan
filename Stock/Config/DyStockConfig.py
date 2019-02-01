@@ -1,5 +1,6 @@
 import os
 import json
+import copy
 
 from DyCommon.DyCommon import DyCommon
 from Stock.Common.DyStockCommon import DyStockCommon
@@ -264,3 +265,52 @@ class DyStockConfig(object):
         DyStockConfig._configStockMongoDb()
         DyStockConfig._configStockWxScKey()
         DyStockConfig._configStockAccount()
+
+    def _getStockMongoDbForBackTesting():
+        data = copy.deepcopy(DyStockConfig.defaultMongoDb)
+
+        # connection
+        data['Connection']['Host'] = DyStockMongoDbEngine.host
+        data['Connection']['Port'] = DyStockMongoDbEngine.port
+
+        # Wind
+        data["CommonDays"]["Wind"]['stockCommonDb'] = DyStockMongoDbEngine.stockCommonDb
+        data["CommonDays"]["Wind"]['tradeDayTableName'] = DyStockMongoDbEngine.tradeDayTableName
+        data["CommonDays"]["Wind"]['codeTableName'] = DyStockMongoDbEngine.codeTableName
+
+        data["CommonDays"]["Wind"]['stockDaysDb'] = DyStockMongoDbEngine.stockDaysDb
+
+        # TuShare
+        data["CommonDays"]["TuShare"]['stockCommonDb'] = DyStockMongoDbEngine.stockCommonDbTuShare
+        data["CommonDays"]["TuShare"]['tradeDayTableName'] = DyStockMongoDbEngine.tradeDayTableNameTuShare
+        data["CommonDays"]["TuShare"]['codeTableName'] = DyStockMongoDbEngine.codeTableNameTuShare
+
+        data["CommonDays"]["TuShare"]['stockDaysDb'] = DyStockMongoDbEngine.stockDaysDbTuShare
+
+        # ticks
+        data["Ticks"]["db"] = DyStockMongoDbEngine.stockTicksDb
+
+        return data
+
+    def getConfigForBackTesting():
+        """
+            多进程回测需要将当前进程的配置参数
+        """
+        data = {}
+        data['exePath'] = DyCommon.exePath
+        data['defaultHistDaysDataSource'] = DyStockCommon.defaultHistDaysDataSource
+        data['tuSharePro'] = {'useTuSharePro': DyStockCommon.useTuSharePro,
+                            'tuShareProToken': DyStockCommon.tuShareProToken,
+                            }
+        data['mongoDb'] = DyStockConfig._getStockMongoDbForBackTesting()
+
+        return data
+
+    def setConfigForBackTesting(data):
+        DyCommon.exePath = data['exePath']
+        DyStockCommon.defaultHistDaysDataSource = data['defaultHistDaysDataSource']
+        DyStockCommon.useTuSharePro = data['tuSharePro']['useTuSharePro']
+        DyStockCommon.tuShareProToken = data['tuSharePro']['tuShareProToken']
+
+        DyStockConfig.configStockMongoDb(data['mongoDb'])
+        

@@ -6,15 +6,19 @@ from EventEngine.DyEventEngine import *
 from ...DyStockBackTestingCommon import *
 from .DyStockBackTestingCtaEngine import *
 from ....Data.Engine.DyStockDataEngine import *
+from Stock.Config.DyStockConfig import DyStockConfig
 
 
-def dyStockBackTestingStrategyEngineProcess(outQueue, inQueue, reqData):
+def dyStockBackTestingStrategyEngineProcess(outQueue, inQueue, reqData, config=None):
     """
         股票回测处理实体。每个回测处理实体由一个参数组合和一个回测周期组成。
         每个交易日回测结束后向UI推送持仓和成交信息
     """
     paramGroupNo = reqData.paramGroupNo
     period = [reqData.tDays[0], reqData.tDays[-1]]
+
+    if config is not None:
+        DyStockConfig.setConfigForBackTesting(config)
 
     eventEngine = DyDummyEventEngine()
     info = DySubInfo(paramGroupNo, period, outQueue)

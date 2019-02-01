@@ -3,6 +3,7 @@ import threading
 import queue
 
 from .DyStockBackTestingStrategyEngineProcess import *
+from Stock.Config.DyStockConfig import DyStockConfig
 
 
 class DyStockBackTestingStrategyEngineProxy(threading.Thread):
@@ -31,7 +32,8 @@ class DyStockBackTestingStrategyEngineProxy(threading.Thread):
         childQueue = self._ctx.Queue()
         self._childQueues.append(childQueue)
 
-        p = self._ctx.Process(target=dyStockBackTestingStrategyEngineProcess, args=(self._queue, childQueue, reqData))
+        config = DyStockConfig.getConfigForBackTesting()
+        p = self._ctx.Process(target=dyStockBackTestingStrategyEngineProcess, args=(self._queue, childQueue, reqData, config))
         p.start()
 
         self._processes.append(p)
