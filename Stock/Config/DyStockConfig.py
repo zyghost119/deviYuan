@@ -294,7 +294,7 @@ class DyStockConfig(object):
 
     def getConfigForBackTesting():
         """
-            多进程回测需要将当前进程的配置参数
+            多进程回测需要当前进程的配置参数
         """
         data = {}
         data['exePath'] = DyCommon.exePath
