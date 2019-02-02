@@ -20,8 +20,6 @@ class DyStockBackTestingStrategyPeriodsResultWidget(QTabWidget):
         # 每个回测策略会被分成几个时间周期并行运行，每个周期的回归结果会生成一个周期窗口
         self._strategyPeriodWidgets = {}
 
-        self._windows = []
-
     def _getTabPos(self, period):
         periodStartDates = [period[0]]
 
@@ -47,9 +45,6 @@ class DyStockBackTestingStrategyPeriodsResultWidget(QTabWidget):
             self.removeTab(0)
 
         self._strategyPeriodWidgets = {}
-
-    def mergePeriod(self):
-        self._newMergePeriodWindow()
 
     def newPeriod(self, event):
         # unpack
@@ -140,37 +135,28 @@ class DyStockBackTestingStrategyPeriodsResultWidget(QTabWidget):
         tabName = '[' + ','.join(period) + ']'
         self._strategyPeriodWidgets[tabName].combineInit(statsWidgets, posWidgets, dealsWidgets)
 
-    def _newMergePeriodWindow(self):
+    def mergePeriod(self, periodsResultWidget):
         # get data to be merged 
         start, end = None, None
         statsWidgets, posWidgets, dealsWidgets = [], [], []
-        for tabName in sorted(self._strategyPeriodWidgets):
+        for tabName in sorted(periodsResultWidget._strategyPeriodWidgets):
             # get merged period
             if start is None:
-                start = tabName[:len('2000-01-01')]
+                start = tabName[1:len('[2000-01-01')]
 
-            endTemp = tabName[len('2000-01-01,'):]
+            endTemp = tabName[len('[2000-01-01,'):-1]
             if end is None:
                 end = endTemp
             elif endTemp > end:
                 end = endTemp
 
             # get widgets
-            widget = self._strategyPeriodWidgets[tabName]
+            widget = periodsResultWidget._strategyPeriodWidgets[tabName]
             statsWidgets.append(widget.statsWidget)
             posWidgets.append(widget.posWidget)
             dealsWidgets.append(widget.dealsWidget)
-
-        # new window
-        window = self.__class__(self._strategyCls, self._paramGroupNo, self._param, self._eventEngine, self._dataEngine, self._dataViewer)
         
-        window._combineInit([start, end], statsWidgets, posWidgets, dealsWidgets)
+        self._combineInit([start, end], statsWidgets, posWidgets, dealsWidgets)
 
-        window.setWindowTitle('{}'.format(self._strategyCls.chName))
-        window.showMaximized()
-
-        self._windows.append(window)
-
-        
         
 

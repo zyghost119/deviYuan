@@ -21,6 +21,7 @@ class DyStockBackTestingStrategyParamGroupResultWidget(QWidget):
         self._eventEngine = eventEngine
         self._dataEngine = dataEngine
         self._dataViewer = dataViewer
+        self._windows = []
         
         self._initUi()
 
@@ -64,4 +65,13 @@ class DyStockBackTestingStrategyParamGroupResultWidget(QWidget):
         return groupNames + [''] + statsOverviewNames, groupData + [''] + statsOverviewData
 
     def mergePeriod(self):
-        self._periodsResultWidget.mergePeriod()
+        # new window
+        window = self.__class__(self._strategyCls, self._paramGroupNo, self._param, self._eventEngine, self._dataEngine, self._dataViewer)
+        
+        window._periodsResultWidget.mergePeriod(self._periodsResultWidget)
+
+        window.setWindowTitle('{}: 参数{}'.format(self._strategyCls.chName, self._paramGroupNo))
+        window.showMaximized()
+
+        self._windows.append(window)
+        
