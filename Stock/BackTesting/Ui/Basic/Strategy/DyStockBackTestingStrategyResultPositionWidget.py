@@ -33,3 +33,23 @@ class DyStockBackTestingStrategyResultPositionWidget(DyTableWidget):
                           pos_.holdingPeriod,
                           '是' if pos_.xrd else '否'
                           ]
+
+    def combineInit(self, selves):
+        """
+            use self widgets to initialize itself
+            @selves: [self object]
+        """
+        # get column names and rows
+        colNames = None
+        rows = []
+        for self_ in selves:
+            colNames = self_.getColNames()
+            rows.extend(self_.getAll())
+
+        if colNames is None:
+            return
+        
+        # show on widget
+        self.setColNames(colNames)
+        self.fastAppendRows(rows, self.getAutoForegroundColName())
+

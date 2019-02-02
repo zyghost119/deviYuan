@@ -89,3 +89,23 @@ class DyStockBackTestingStrategyPeriodResultWidget(QWidget):
 
     def overview(self):
         return self._statsWidget.overview()
+
+    @property
+    def statsWidget(self):
+        return self._statsWidget
+
+    @property
+    def posWidget(self):
+        return self._posWidget
+
+    @property
+    def dealsWidget(self):
+        return self._dealsWidget
+
+    def combineInit(self, statsWidgets, posWidgets, dealsWidgets):
+        """
+            use self widgets to initialize itself
+        """
+        self._statsWidget.combineInit(statsWidgets)
+        self._posWidget.combineInit(posWidgets)
+        self._dealsWidget.combineInit(dealsWidgets)

@@ -1,3 +1,5 @@
+import copy
+
 import pandas as pd
 import numpy as np
 from matplotlib.gridspec import GridSpec
@@ -38,7 +40,7 @@ class DyStockBackTestingStrategyResultStatsWidget(DyTableWidget):
 
         self.itemDoubleClicked.connect(self._itemDoubleClicked)
 
-    def update(self, ackData):
+    def update(self, ackData, ui=True):
         # save
         self._ackData.append(ackData)
 
@@ -95,9 +97,10 @@ class DyStockBackTestingStrategyResultStatsWidget(DyTableWidget):
         profitLossRatio = self._calcProfitLossRatio()
 
         # UI
-        self[0] = [ackData.day, initCash, totalValue, posValue, curCash,
-                   self._curPnlRatio, annualisedPnlRatio, self._maxDrop, self._maxLoss, self._maxProfit,
-                   hitRate, profitLossRatio, sharpe]
+        if ui:
+            self[0] = [ackData.day, initCash, totalValue, posValue, curCash,
+                    self._curPnlRatio, annualisedPnlRatio, self._maxDrop, self._maxLoss, self._maxProfit,
+                    hitRate, profitLossRatio, sharpe]
 
     def _calcProfitLossRatio(self):
         """
@@ -224,3 +227,44 @@ class DyStockBackTestingStrategyResultStatsWidget(DyTableWidget):
         """
         columns = self.header[self.header.index('资金') + 1:]
         return columns, self.getColumnsData(columns)
+
+    def combineInit(self, selves):
+        """
+            use self widgets to initialize itself
+            采用连续复利方式合并
+            @selves: [self object]
+        """
+        # get total number of ack data for UI updating, as well as init cash for factor
+        initCash = None
+        totalAckDataNbr = 0
+        for self_ in selves:
+            if not self_._ackData:
+                continue
+
+            totalAckDataNbr += len(self_._ackData)
+            if initCash is None:
+                initCash = self_._ackData[0].initCash
+
+        if initCash is None:
+            return
+
+        # recalculate ack data and then push like event to recover all states
+        ackDataCount = 0
+        for self_ in selves:
+            if not self_._ackData:
+                continue
+
+            # factor related parameters for each ack data
+            factor = initCash/self_._ackData[0].initCash
+            ackDatas = copy.deepcopy(self_._ackData)
+            for ackData in ackDatas:
+                ackDataCount += 1
+
+                # factor
+                ackData.initCash *= factor
+                ackData.curCash *= factor
+                for _, pos in ackData.curPos.items():
+                    pos.totalVolume *= factor
+
+                # push like event
+                self.update(ackData, ui=ackDataCount==totalAckDataNbr)

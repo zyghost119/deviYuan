@@ -92,7 +92,7 @@ class DyStockBackTestingStrategyResultWidget(QTabWidget):
         self._tabBarMenu.popup(QCursor.pos())
 
     def _mergePeriodAct(self):
-        self.widget(self._rightClickedTabIndex)
+        self.widget(self._rightClickedTabIndex).mergePriod()
 
     def sort(self, ascending=True):
         # 按盈亏作为键值建立参数窗口字典

@@ -62,3 +62,6 @@ class DyStockBackTestingStrategyParamGroupResultWidget(QWidget):
 
         # add seperator ''
         return groupNames + [''] + statsOverviewNames, groupData + [''] + statsOverviewData
+
+    def mergePeriod(self):
+        self._periodsResultWidget.mergePeriod()
