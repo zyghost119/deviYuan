@@ -521,34 +521,38 @@ class DyStockDataGateway(object):
 
         sleepTime = self.tuShareDaysSleepTimeConst + self.tuShareDaysSleepTime
         try:
-            # 以无复权方式从腾讯获取OHCLV，成交量是手（整数化过）
-            # 此接口支持ETF日线数据
-            df = ts.get_k_data(tuShareCode, startDate, endDate, autype=None, pause=sleepTime)
-            if df is None or df.empty: # If no data, TuShare return None
-                df = pd.DataFrame(columns=['date', 'open', 'high', 'close', 'low', 'volume'])
-            else:
-                df = df.sort_index()
+            try:
+                # 以无复权方式从腾讯获取OHCLV，成交量是手（整数化过）
+                # 此接口支持ETF日线数据
+                df = ts.get_k_data(tuShareCode, startDate, endDate, autype=None, pause=sleepTime)
+                if df is None or df.empty: # If no data, TuShare return None
+                    df = pd.DataFrame(columns=['date', 'open', 'high', 'close', 'low', 'volume'])
+                else:
+                    df = df.sort_index()
+            except Exception as ex:
+                self._info.print("从TuShare获取{}({})日线数据[{}, {}]失败: {}".format(code, name, startDate, endDate, ex), DyLogData.error)
+                return None
+
+            df['volume'] = df['volume']*100
+
+            # !!!TuShare没有提供换手率，复权因子和成交额，所以只能假设。
+            # 策略针对ETF的，需要注意。
+            df['turnover'] = 0
+            df['factor'] = 1
+            df['amount'] = 0
+            df.index.name = None
+
+            # change to Wind's indicators
+            df.rename(columns={'date': 'datetime', 'amount': 'amt', 'turnover': 'turn', 'factor': 'adjfactor'}, inplace=True)
+
+            # 把日期的HH:MM:SS转成 00:00:00
+            df['datetime'] = pd.to_datetime(df['datetime'], format='%Y-%m-%d')
+
+            # select according @fields
+            df = df[['datetime'] + fields]
         except Exception as ex:
             self._info.print("从TuShare获取{}({})日线数据[{}, {}]失败: {}".format(code, name, startDate, endDate, ex), DyLogData.error)
             return None
-
-        df['volume'] = df['volume']*100
-
-        # !!!TuShare没有提供换手率，复权因子和成交额，所以只能假设。
-        # 策略针对ETF的，需要注意。
-        df['turnover'] = 0
-        df['factor'] = 1
-        df['amount'] = 0
-        df.index.name = None
-
-        # change to Wind's indicators
-        df.rename(columns={'date': 'datetime', 'amount': 'amt', 'turnover': 'turn', 'factor': 'adjfactor'}, inplace=True)
-
-        # 把日期的HH:MM:SS转成 00:00:00
-        df['datetime'] = pd.to_datetime(df['datetime'], format='%Y-%m-%d')
-
-        # select according @fields
-        df = df[['datetime'] + fields]
 
         return df
 
