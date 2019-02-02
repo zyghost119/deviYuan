@@ -377,6 +377,10 @@ class DyStockBackTestingStrategyResultDealsWidget(DyStockTableWidget):
         """
             @colNamesList: [colNames]
         """
+        if not colNamesList:
+            return
+
+        # set headers
         self.setColNames(colNamesList[0])
 
         # reassign variables headers
@@ -386,7 +390,7 @@ class DyStockBackTestingStrategyResultDealsWidget(DyStockTableWidget):
         tradeCost = 0
         for colNames in colNamesList:
             # '交易类型'
-            colName = colNames(self._typeCol)
+            colName = colNames[self._typeCol]
             buyCountStart = colName.find('买入')
             sellCountStart = colName.find('卖出')
 
@@ -394,11 +398,11 @@ class DyStockBackTestingStrategyResultDealsWidget(DyStockTableWidget):
             sellCount += int(colName[sellCountStart + 3 : -1])
 
             # '盈亏'
-            colName = self.getColName(self._pnlCol)
+            colName = colNames[self._pnlCol]
             pnl += float(colName[3:-1])
 
             # '交易成本'
-            colName = self.getColName(self._tradeCostCol)
+            colName = colNames[self._tradeCostCol]
             tradeCost += float(colName[5:-1])
 
         self.setColName(self._typeCol, '交易类型(买入:{},卖出:{})'.format(buyCount, sellCount))

@@ -268,3 +268,6 @@ class DyStockBackTestingStrategyResultStatsWidget(DyTableWidget):
 
                 # push like event
                 self.update(ackData, ui=ackDataCount==totalAckDataNbr)
+
+            # new init cash
+            initCash = ackData.initCash

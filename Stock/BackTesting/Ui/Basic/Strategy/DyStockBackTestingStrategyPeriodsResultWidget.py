@@ -20,6 +20,8 @@ class DyStockBackTestingStrategyPeriodsResultWidget(QTabWidget):
         # 每个回测策略会被分成几个时间周期并行运行，每个周期的回归结果会生成一个周期窗口
         self._strategyPeriodWidgets = {}
 
+        self._windows = []
+
     def _getTabPos(self, period):
         periodStartDates = [period[0]]
 
@@ -46,8 +48,8 @@ class DyStockBackTestingStrategyPeriodsResultWidget(QTabWidget):
 
         self._strategyPeriodWidgets = {}
 
-    def mergePeriod(self, name):
-        pass
+    def mergePeriod(self):
+        self._newMergePeriodWindow()
 
     def newPeriod(self, event):
         # unpack
@@ -166,5 +168,9 @@ class DyStockBackTestingStrategyPeriodsResultWidget(QTabWidget):
 
         window.setWindowTitle('{}'.format(self._strategyCls.chName))
         window.showMaximized()
+
+        self._windows.append(window)
+
+        
         
 
