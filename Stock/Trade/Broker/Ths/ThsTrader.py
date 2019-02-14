@@ -34,7 +34,7 @@ class ThsTrader(UiTrader):
     account = None
     password = None
 
-    heartBeatTimer = 0 # no heart beat
+    heartBeatTimer = 60
 
     curEntrustHeaderNoIndex = 10
     curEntrustHeaderStateIndex = 4
@@ -45,7 +45,7 @@ class ThsTrader(UiTrader):
 
         log.dyInfo = info
 
-        self._uiClient = ThsClientTrader()
+        self._uiClient = ThsClientTrader(info)
 
     def _login(self):
         user = self.account

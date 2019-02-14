@@ -9,6 +9,9 @@ import pandas as pd
 
 from . import pop_dialog_handler
 
+from DyCommon.DyCommon import DyLogData
+
+
 if not sys.platform.startswith("darwin"):
     try:
         import pywinauto
@@ -182,7 +185,9 @@ class ThsClientTrader(IClientTrader):
     # The strategy to use for getting grid data
     grid_strategy = Copy
 
-    def __init__(self):
+    def __init__(self, info):
+        self._info = info # DY info
+
         self._config = CommonConfig
         self._app = None
         self._main = None
@@ -506,7 +511,7 @@ class ThsClientTrader(IClientTrader):
 
     @functools.lru_cache()
     def _get_left_menus_handle(self):
-        while True:
+        for _ in range(3):
             try:
                 handle = self._main.window(
                     control_id=129, class_name="SysTreeView32"
@@ -514,9 +519,12 @@ class ThsClientTrader(IClientTrader):
                 # sometime can't find handle ready, must retry
                 handle.wait("ready", 2)
                 return handle
-            # pylint: disable=broad-except
-            except Exception:
-                pass
+            except Exception as ex:
+                print('同花顺客户端: _get_left_menus_handle异常: {}'.format(self._main, handle, ex))
+        else:
+            text = '同花顺客户端: 请重新启动同花顺客户端和DevilYuan!'
+            print(text)
+            self._info.print(text, DyLogData.error)
 
     def _cancel_entrust_by_double_click(self, row):
         x = self._config.CANCEL_ENTRUST_GRID_LEFT_MARGIN
