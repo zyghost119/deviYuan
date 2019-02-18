@@ -1,7 +1,7 @@
 from datetime import *
 from collections import OrderedDict
 
-from PyQt5.QtWidgets import QComboBox, QGridLayout, QLabel, QLineEdit, QPushButton, QDialog, QApplication
+from PyQt5.QtWidgets import QComboBox, QCheckBox, QGridLayout, QLabel, QLineEdit, QPushButton, QDialog, QApplication
 
 from DyCommon.Ui.DyTableWidget import *
 
@@ -88,6 +88,17 @@ class DyStockBackTestingSettingDlg(QDialog):
         endDateLable.setStyleSheet("color:#4169E1")
         self._endDateLineEdit = QLineEdit(datetime.now().strftime("%Y-%m-%d"))
 
+        # DB Cache
+        self._dbCacheCheckBox = QCheckBox('数据库缓存')
+        self._dbCacheCheckBox.setChecked(False)
+        self._dbCacheCheckBox.clicked.connect(self._dbCacheCheckBoxClicked)
+
+        self._dbCachePreLoadDaysSizeLabel = QLabel('预载入日线数据大小(0: 回测周期)')
+        self._dbCachePreLoadDaysSizeLabel.setEnabled(False)
+
+        self._dbCachePreLoadDaysSizeLineEdit = QLineEdit('0')
+        self._dbCachePreLoadDaysSizeLineEdit.setEnabled(False)
+
         cancelPushButton = QPushButton('Cancel')
         okPushButton = QPushButton('OK')
         cancelPushButton.clicked.connect(self._cancel)
@@ -117,14 +128,21 @@ class DyStockBackTestingSettingDlg(QDialog):
 
         dateStartPos = 9
 
+        # date
         grid.addWidget(startDateLable, dateStartPos, 0)
         grid.addWidget(self._startDateLineEdit, dateStartPos + 1, 0)
 
         grid.addWidget(endDateLable, dateStartPos, 1)
         grid.addWidget(self._endDateLineEdit, dateStartPos + 1, 1)
 
-        grid.addWidget(okPushButton, dateStartPos + 2, 1)
-        grid.addWidget(cancelPushButton, dateStartPos + 2, 0)
+        # DB cache
+        grid.addWidget(self._dbCacheCheckBox, dateStartPos + 2, 0)
+        grid.addWidget(self._dbCachePreLoadDaysSizeLabel, dateStartPos + 3, 0)
+        grid.addWidget(self._dbCachePreLoadDaysSizeLineEdit, dateStartPos + 3, 1)
+
+        # OK & Cancel
+        grid.addWidget(okPushButton, dateStartPos + 4, 1)
+        grid.addWidget(cancelPushButton, dateStartPos + 4, 0)
 
         self.setLayout(grid)
 
@@ -193,6 +211,11 @@ class DyStockBackTestingSettingDlg(QDialog):
 
         return param
 
+    def _dbCacheCheckBoxClicked(self):
+        enable = self._dbCacheCheckBox.isChecked()
+        self._dbCachePreLoadDaysSizeLabel.setEnabled(enable)
+        self._dbCachePreLoadDaysSizeLineEdit.setEnabled(enable)
+
     def _ok(self):
         self._data['startDate'] = self._startDateLineEdit.text()
         self._data['endDate'] = self._endDateLineEdit.text()
@@ -206,6 +229,9 @@ class DyStockBackTestingSettingDlg(QDialog):
 
         self._data['riskGuard'] = int(self._riskGuardLineEdit.text())
         self._data['slippage'] = float(self._slippageLineEdit.text())
+
+        if self._dbCacheCheckBox.isChecked():
+            self._data['dbCachePreLoadDaysSize'] = int(self._dbCachePreLoadDaysSizeLineEdit.text())
 
         self.accept()
 
