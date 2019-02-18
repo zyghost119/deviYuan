@@ -199,6 +199,9 @@
     <Compile Include="Stock\Data\Engine\Common\DyStockDataSectorCodeTable.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Stock\Data\Engine\DyStockDbCache.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Stock\Data\Gateway\DyStockDataTdx.py" />
     <Compile Include="Stock\Data\Gateway\DyStockDataTicksGateway.py" />
     <Compile Include="Stock\Data\Ui\Other\DyStockDataHistDaysManualUpdateDlg.py">

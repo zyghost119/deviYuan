@@ -25,7 +25,7 @@ class DyStockBackTestingCtaEngine(object):
     """
 
 
-    def __init__(self, eventEngine, info, dataEngine, reqData):
+    def __init__(self, eventEngine, info, dataEngine, reqData, dbCache=False):
         # unpack
         strategyCls = reqData.strategyCls
         settings = reqData.settings # 回测参数设置
@@ -62,7 +62,7 @@ class DyStockBackTestingCtaEngine(object):
         # error DataEngine
         # 有时策略@prepare需要独立载入大量个股数据，避免输出大量log
         errorInfo = DyErrorInfo(eventEngine)
-        self._errorDataEngine = DyStockDataEngine(eventEngine, errorInfo, registerEvent=False)
+        self._errorDataEngine = DyStockDataEngine(eventEngine, errorInfo, registerEvent=False, dbCache=dbCache)
         self._errorDaysEngine = self._errorDataEngine.daysEngine
 
         self._curInit()
@@ -552,7 +552,10 @@ class DyStockBackTestingCtaEngine(object):
         return True
 
     def run(self, tDay):
-        """ 运行指定交易日回测 """
+        """
+            运行指定交易日回测
+        """
+        self._info.print('开始回测策略[{}], {}...'.format(self._strategy.chName, tDay), DyLogData.ind)
         
         # 检查参数合法性
         if not self._verifyParams(tDay):

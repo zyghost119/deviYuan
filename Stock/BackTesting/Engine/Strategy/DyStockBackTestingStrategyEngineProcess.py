@@ -7,7 +7,23 @@ from ...DyStockBackTestingCommon import *
 from .DyStockBackTestingCtaEngine import *
 from ....Data.Engine.DyStockDataEngine import *
 from Stock.Config.DyStockConfig import DyStockConfig
+from Stock.Data.Engine.DyStockDbCache import DyStockDbCache
 
+
+def __setDbCache(reqData):
+    dbCachePreLoadDaysSize = reqData.settings.get('dbCachePreLoadDaysSize')
+
+    useDbCache = False
+    if dbCachePreLoadDaysSize is not None:
+        useDbCache = True
+
+        # change to the length of period
+        if dbCachePreLoadDaysSize == 0:
+            dbCachePreLoadDaysSize = len(reqData.tDays)
+
+        DyStockDbCache.preLoadDaysSize = dbCachePreLoadDaysSize
+
+    return useDbCache
 
 def dyStockBackTestingStrategyEngineProcess(outQueue, inQueue, reqData, config=None):
     """
@@ -20,12 +36,16 @@ def dyStockBackTestingStrategyEngineProcess(outQueue, inQueue, reqData, config=N
     if config is not None:
         DyStockConfig.setConfigForBackTesting(config)
 
+    # set DB Cache
+    useDbCache = __setDbCache(reqData)
+
+    # Engines
     eventEngine = DyDummyEventEngine()
     info = DySubInfo(paramGroupNo, period, outQueue)
-    dataEngine = DyStockDataEngine(eventEngine, info, False)
+    dataEngine = DyStockDataEngine(eventEngine, info, False, dbCache=useDbCache)
 
     # create stock back testing CTA engine
-    ctaEngine = DyStockBackTestingCtaEngine(eventEngine, info, dataEngine, reqData)
+    ctaEngine = DyStockBackTestingCtaEngine(eventEngine, info, dataEngine, reqData, dbCache=useDbCache)
     
     for tDay in reqData.tDays:
         try:

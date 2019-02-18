@@ -13,11 +13,11 @@ class DyStockDataEngine(object):
         sWaitingDays = 'sWaitingDays'
         sWaitingTicks = 'sWaitingTicks'
 
-    def __init__(self, eventEngine, info, registerEvent=True):
+    def __init__(self, eventEngine, info, registerEvent=True, dbCache=False):
         self._eventEngine = eventEngine
         self._info = info
 
-        self._mongoDbEngine = DyStockMongoDbEngine(self._info)
+        self._mongoDbEngine = DyStockMongoDbEngine(self._info, dbCache)
         self._gateway = DyStockDataGateway(self._eventEngine, self._info, registerEvent)
 
         self._daysEngine = DyStockDataDaysEngine(self._eventEngine, self._mongoDbEngine, self._gateway, self._info, registerEvent)
