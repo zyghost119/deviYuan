@@ -182,6 +182,31 @@ class DySubInfo:
         self._enabled = enable
 
 
+class DyErrorSubInfo:
+    def __init__(self, subInfo):
+        self._paramGroupNo = subInfo._paramGroupNo
+        self._period = subInfo._period
+        self._outQueue = subInfo._outQueue
+
+    def print(self, description, type=DyLogData.info):
+        if type != DyLogData.error and type != DyLogData.warning:
+            return
+
+        event = DyEvent(DyEventType.subLog_ + '_' + str(self._paramGroupNo) + str(self._period))
+        event.data = DyLogData(description, type)
+
+        self._outQueue.put(event)
+
+    def progressSingle(self, percent):
+        pass
+
+    def progressTotal(self, percent):
+        pass
+
+    def initProgress(self):
+        pass
+
+
 class DyTime:
 
     def getTimeInterval(time1, time2):

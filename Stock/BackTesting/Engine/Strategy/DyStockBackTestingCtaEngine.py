@@ -61,7 +61,7 @@ class DyStockBackTestingCtaEngine(object):
 
         # error DataEngine
         # 有时策略@prepare需要独立载入大量个股数据，避免输出大量log
-        errorInfo = DyErrorInfo(eventEngine)
+        errorInfo = DyErrorSubInfo(info)
         self._errorDataEngine = DyStockDataEngine(eventEngine, errorInfo, registerEvent=False, dbCache=dbCache)
         self._errorDaysEngine = self._errorDataEngine.daysEngine
 
