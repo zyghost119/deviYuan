@@ -877,7 +877,7 @@ class DyStockCtaTemplate(object):
             if pos and pos.sync:
                 priceAdjFactor = preClose/tick.preClose
                 if pos.priceAdjFactor != priceAdjFactor:
-                    self._info.print('策略[{}]: 复权因子-新浪({})与{}({})不一致'.format(self.chName, priceAdjFactor, DyStockTradeCommon.accountMap[self.broker], pos.priceAdjFactor), DyLogData.warning)
+                    self._info.print('策略[{}]: {}({})复权因子不一致: 新浪({}), {}({})'.format(self.chName, tick.code, tick.name, priceAdjFactor, DyStockTradeCommon.accountMap[self.broker], pos.priceAdjFactor), DyLogData.warning)
 
             # call strategy adj function
             func(self, tick, preClose)
