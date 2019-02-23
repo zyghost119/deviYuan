@@ -1287,7 +1287,7 @@ class DyStockDataViewer(object):
         plt.setp([a.get_xticklabels() for a in f.axes[:-1]], visible=False)
         f.show()
 
-    def plotBuySellDayCandleStick(self, code, buySellDates, maIndicator='close'):
+    def plotBuySellDayCandleStick(self, code, buySellDates, withDate=True, maIndicator='close'):
         """
             绘制有买卖标记的股票日K线
         """
@@ -1317,6 +1317,7 @@ class DyStockDataViewer(object):
         periods = self._plotBuySellDayCandleStick(code, buySellDates,
                                                   startDate=startDay, endDate=endDay,
                                                   left=0.05, right=0.95, top=0.95, bottom=0.5,
+                                                  withDate=withDate,
                                                   maIndicator=maIndicator)
 
         # plot index
@@ -1324,6 +1325,7 @@ class DyStockDataViewer(object):
         self._plotBuySellDayCandleStick(indexCode, buySellDates,
                                         periods=periods,
                                         left=0.05, right=0.95, top=0.45, bottom=0.05,
+                                        withDate=withDate,
                                         maIndicator=maIndicator)
 
         # layout
@@ -1335,6 +1337,7 @@ class DyStockDataViewer(object):
                                    startDate=None, endDate=None,
                                    periods=None,
                                    left=None, right=None, top=None, bottom=None,
+                                   withDate=True,
                                    maIndicator='close'):
         """
             股票有买卖记号的日线K线图
@@ -1433,7 +1436,8 @@ class DyStockDataViewer(object):
                              color='k',
                              verticalalignment=verticalalignment,
                              horizontalalignment='center')
-                axPrice.text(x, y + dateYOffset, date[2:], horizontalalignment='center')
+                if withDate:
+                    axPrice.text(x, y + dateYOffset, date[2:], horizontalalignment='center')
             except:
                 pass
 
