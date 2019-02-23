@@ -17,16 +17,16 @@ class DyStockDbCache(object):
         """
             个股日线数据
         """
-        def __init__(self, tradeDays):
+        def __init__(self, tradeDays, latestDateInDb):
             self.df = None
             self.tradeDays = tradeDays # [trade day], 个股交易日列表
             self.tradeDaysIndexes = {} # {date: index}, 个股交易日列表索引字典
 
-            # establish indexes for all range dates
-            if not self.tradeDays:
+            # Establish indexes for all range dates
+            if not (self.tradeDays and latestDateInDb):
                 return
 
-            dates = DyTime.getDates(self.tradeDays[0], self.tradeDays[-1], strFormat=True)
+            dates = DyTime.getDates(self.tradeDays[0], latestDateInDb, strFormat=True)
             j = 0 # for @self.tradeDays
             latestTradeDayIndex = 0
             for date in dates:
@@ -156,6 +156,12 @@ class DyStockDbCache(object):
 
         self._codeDaysDict = {} # {code: @CodeDays}
 
+        # latest date of days in DB
+        self._latestDateInDb = None
+        date = self._dbEngine.getDaysLatestDate()
+        if date is not None:
+            self._latestDateInDb = date['datetime'].strftime("%Y-%m-%d")
+
     def _initCodeDays(self, code, name=None):
         codeDays = self._codeDaysDict.get(code)
         if codeDays is not None:
@@ -169,7 +175,7 @@ class DyStockDbCache(object):
         if tradyDays is None:
             return None
 
-        codeDays = self.CodeDays(tradyDays)
+        codeDays = self.CodeDays(tradyDays, self._latestDateInDb)
         self._codeDaysDict[code] = codeDays
 
         return codeDays
