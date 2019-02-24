@@ -59,7 +59,9 @@ DevilYuan股票量化系统由python编写，支持python3.4及以上版本，�
     - 本项目是用VS2017开发的。你可以选择是用VS2017，或者用其他IDE 
 - 需要安装的Python包
     - tushare
-    - pytdx **(由于tushare可能包含老版本的pytdx，请先pip uninstall pytdx，然后再pip install pytdx)**
+    - pytdx
+        - 由于tushare可能包含老版本的pytdx，请先`pip uninstall pytdx`，然后再`pip install pytdx`
+        - 如果执行上面的步骤后，仍然无法解决，请先手动删除`<python安装目录>\Lib\site-packages`下pytdx相关的所有目录夹(pytdx, pytdx*.dist-info, pytdx *.egg-info)，然后再执行pip install pytdx
     - pymongo
     - qdarkstyle
     - pytesseract
