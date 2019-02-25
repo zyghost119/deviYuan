@@ -18,15 +18,20 @@ class DyStockTradeWxBot(WXBot):
         self.DEBUG = False
 
     def handle_msg_all(self, msg):
-        if msg['user']['name'] == 'self':
+        try:
+            if msg['user']['name'] == 'self':
+                event = DyEvent(DyEventType.wxQueryStockStrategy)
+                event.data = msg['content']['data']
 
-            event = DyEvent(DyEventType.wxQueryStockStrategy)
-            event.data = msg['content']['data']
-
-            self._eventEngine.put(event)
+                self._eventEngine.put(event)
+        except:
+            pass
 
     def send(self, msg):
-        self.send_msg_by_uid(msg, self.my_account['UserName'])
+        try:
+            self.send_msg_by_uid(msg, self.my_account['UserName'])
+        except:
+            pass
 
 
 class DyStockTradeWxEngine(object):
