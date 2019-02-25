@@ -476,6 +476,7 @@
     <Compile Include="Stock\Trade\Broker\YhNew\__init__.py" />
     <Compile Include="Stock\Trade\Broker\__init__.py" />
     <Compile Include="Stock\Trade\Strategy\Cta\DyST_BankIntraDaySpread.py" />
+    <Compile Include="Stock\Trade\Strategy\Cta\DyST_LimitUpDownMonitor.py" />
     <Compile Include="Stock\Trade\Strategy\Cta\DyST_MaWalk.py">
       <SubType>Code</SubType>
     </Compile>
