@@ -17,13 +17,15 @@ class DyStockTradeStrategyMarketMonitorWidget(QWidget):
 
         self._eventEngine = eventEngine
         self._strategyCls = strategyCls
+        
+        self._cloneDataWidgets = []
 
         self._registerEvent()
 
         self._initUi(strategyState)
 
     def _initUi(self, strategyState):
-        self._dataWidget = DyStockTradeStrategyMarketMonitorDataWidget(self._strategyCls)
+        self._dataWidget = DyStockTradeStrategyMarketMonitorDataWidget(self._strategyCls, self)
         self._indWidget = DyStockTradeStrategyMarketMonitorIndWidget(self._eventEngine, self._strategyCls, strategyState)
 
         self._dataLabel = QLabel('数据')
@@ -46,16 +48,26 @@ class DyStockTradeStrategyMarketMonitorWidget(QWidget):
 
         # set menu for labels
         self._dataLabel.setContextMenuPolicy(Qt.CustomContextMenu)
-        self._dataLabel.customContextMenuRequested.connect(self._showLabelContextMenu)
+        self._dataLabel.customContextMenuRequested.connect(self._showDataLabelContextMenu)
 
         self._indLabel.setContextMenuPolicy(Qt.CustomContextMenu)
-        self._indLabel.customContextMenuRequested.connect(self._showLabelContextMenu)
+        self._indLabel.customContextMenuRequested.connect(self._showIndLabelContextMenu)
 
-        self._labelMenu = QMenu(self) 
+        self._dataLabelMenu = QMenu(self) 
         
         action = QAction('叠加', self)
         action.triggered.connect(self._overlapAct)
-        self._labelMenu.addAction(action)
+        self._dataLabelMenu.addAction(action)
+
+        action = QAction('克隆', self)
+        action.triggered.connect(self._cloneDataWidgetAct)
+        self._dataLabelMenu.addAction(action)
+
+        self._indLabelMenu = QMenu(self) 
+        
+        action = QAction('叠加', self)
+        action.triggered.connect(self._overlapAct)
+        self._indLabelMenu.addAction(action)
 
     def _stockMarketMonitorUiHandler(self, event):
         if 'data' in event.data:
@@ -67,6 +79,8 @@ class DyStockTradeStrategyMarketMonitorWidget(QWidget):
                 data = data[:strategyCls.maxUiDataRowNbr]
 
             self._dataWidget.update(data, new)
+            for w in self._cloneDataWidgets:
+                w.update(data, new)
 
         if 'ind' in event.data:
             self._indWidget.update(event.data['ind'])
@@ -92,8 +106,11 @@ class DyStockTradeStrategyMarketMonitorWidget(QWidget):
 
         return super().closeEvent(event)
 
-    def _showLabelContextMenu(self, position):
-        self._labelMenu.popup(QCursor.pos())
+    def _showDataLabelContextMenu(self, position):
+        self._dataLabelMenu.popup(QCursor.pos())
+
+    def _showIndLabelContextMenu(self, position):
+        self._indLabelMenu.popup(QCursor.pos())
 
     def _overlapAct(self):
         grid = self.layout()
@@ -162,3 +179,16 @@ class DyStockTradeStrategyMarketMonitorWidget(QWidget):
         grid.setRowStretch(1, 30)
         grid.setRowStretch(2, 1)
         grid.setRowStretch(3, 30)
+
+    def removeCloneDataWidget(self, cloneWidget):
+        try:
+            self._cloneDataWidgets.remove(cloneWidget)
+        except:
+            pass
+
+    def _cloneDataWidgetAct(self):
+        dataWidget = self._dataWidget.clone()
+        self._cloneDataWidgets.append(dataWidget)
+
+        dataWidget.setWindowTitle('策略[{}]: 数据'.format(self._strategyCls.chName))
+        dataWidget.showMaximized()
