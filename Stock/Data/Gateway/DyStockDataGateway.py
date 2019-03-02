@@ -188,7 +188,10 @@ class DyStockDataGateway(object):
 
         # from TuShare
         if 'TuShare' in DyStockCommon.defaultHistDaysDataSource:
-            tuShareCodes = self._getStockCodesFromTdx()
+            if DyStockCommon.useTuSharePro and DyStockCommon.tuShareProToken:
+                tuShareCodes = self._getStockCodesFromTuSharePro()
+            else:
+                tuShareCodes = self._getStockCodesFromTdx()
             codes = tuShareCodes
 
         # verify
@@ -358,6 +361,23 @@ class DyStockDataGateway(object):
                 codes[code + '.SZ'] = name
 
         self._info.print("从TuShare获取股票代码表成功")
+        return codes
+
+    def _getStockCodesFromTuSharePro(self):
+        self._info.print("从TuSharePro获取股票代码表...")
+
+        self._startTuSharePro()
+        try:
+            df = self._tuSharePro.stock_basic(exchange='', list_status='L', fields='ts_code,name')
+            data = df[['ts_code', 'name']].values.tolist()
+            codes = {}
+            for code, name in data:
+                codes[code] = name
+        except Exception as ex:
+            self._info.print("从TuSharePro获取股票代码表异常: {}".format(ex), DyLogData.error)
+            return None
+
+        self._info.print("从TuSharePro获取股票代码表成功")
         return codes
 
     def _getStockCodesFromTdx(self):
