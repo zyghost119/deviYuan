@@ -18,13 +18,13 @@ class DyST_LimitUpDownMonitor(DyStockCtaTemplate):
 
 
     #--------------- 策略参数 ---------------
-    DeltaSetting = namedtuple('DeltaSetting', 'samplePeriod delta')
+    DeltaSetting = namedtuple('DeltaSetting', 'samplePeriod delta threshold')
 
-    # 涨停数在多少秒内变化多少(%)通知
-    limitUp = DeltaSetting(60, 10)
+    # 涨停数在多少秒内变化多少(%)通知，并且涨停数要大于@threshold
+    limitUp = DeltaSetting(60, 10, 10)
 
-    # 跌停数在多少秒内变化多少(%)通知
-    limitDown = DeltaSetting(60, 10)
+    # 跌停数在多少秒内变化多少(%)通知，并且跌停数要大于@threshold
+    limitDown = DeltaSetting(60, 10, 10)
     
 
     def __init__(self, ctaEngine, info, state, strategyParam=None):
@@ -54,11 +54,12 @@ class DyST_LimitUpDownMonitor(DyStockCtaTemplate):
             delta = (endCount - startCount)/startCount*100
             if abs(delta) >= self.limitUp.delta:
                 # notify
-                timeDelta = DyStockCommon.getTimeInterval(startTime, endTime)
-                limitDownCount = self._limitDownCounts[-1][1]
-                action = '增加' if delta > 0 else '减少'
-                info = '涨停数{}秒内{}{:.1f}%, 涨停数:{}, 跌停数:{}'.format(timeDelta, action, abs(delta), endCount, limitDownCount)
-                self.putStockMarketMonitorUiEvent(signalDetails=[[info]], datetime_=self.marketDatetime)
+                if endCount > self.limitUp.threshold:
+                    timeDelta = DyStockCommon.getTimeInterval(startTime, endTime)
+                    limitDownCount = self._limitDownCounts[-1][1]
+                    action = '增加' if delta > 0 else '减少'
+                    info = '涨停数{}秒内{}{:.1f}%, 涨停数:{}, 跌停数:{}'.format(timeDelta, action, abs(delta), endCount, limitDownCount)
+                    self.putStockMarketMonitorUiEvent(signalDetails=[[info]], datetime_=self.marketDatetime)
             
                 newStart = -1
         else: # remove 0
@@ -82,11 +83,12 @@ class DyST_LimitUpDownMonitor(DyStockCtaTemplate):
             delta = (endCount - startCount)/startCount*100
             if abs(delta) >= self.limitDown.delta:
                 # notify
-                timeDelta = DyStockCommon.getTimeInterval(startTime, endTime)
-                limitUpCount = self._limitUpCounts[-1][1]
-                action = '增加' if delta > 0 else '减少'
-                info = '跌停数{}秒内{}{:.1f}%, 涨停数:{}, 跌停数:{}'.format(timeDelta, action, abs(delta), limitUpCount, endCount)
-                self.putStockMarketMonitorUiEvent(signalDetails=[[info]], datetime_=self.marketDatetime)
+                if endCount > self.limitDown.threshold:
+                    timeDelta = DyStockCommon.getTimeInterval(startTime, endTime)
+                    limitUpCount = self._limitUpCounts[-1][1]
+                    action = '增加' if delta > 0 else '减少'
+                    info = '跌停数{}秒内{}{:.1f}%, 涨停数:{}, 跌停数:{}'.format(timeDelta, action, abs(delta), limitUpCount, endCount)
+                    self.putStockMarketMonitorUiEvent(signalDetails=[[info]], datetime_=self.marketDatetime)
             
                 newStart = -1
         else: # remove 0
