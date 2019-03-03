@@ -393,10 +393,12 @@ class DyStockMongoDbEngine(object):
         try:
             for date in dates:
                 flt = {'datetime': date['datetime']}
-                collection.update_one(flt, {'$set':{'tradeDay': date['tradeDay']}}, upsert=True)
-
+                result = collection.update_one(flt, {'$set':{'tradeDay': date['tradeDay']}}, upsert=True)
+                if not (result.acknowledged and (result.matched_count == 1 or result.upserted_id is not None)):
+                    self._info.print("更新交易日数据到MongoDB失败: date={}, raw_result={}".format(date, result.raw_result), DyLogData.error)
+                    return False
         except Exception as ex:
-            self._info.print("更新交易日数据到MongoDB异常:{0}".format(str(ex) + ', ' + str(ex.details)), DyLogData.error)
+            self._info.print("更新交易日数据到MongoDB异常: {}".format(str(ex) + ', ' + str(ex.details)), DyLogData.error)
             return False
 
         return True
