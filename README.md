@@ -106,6 +106,7 @@ DevilYuan股票量化系统由python编写，支持python3.4及以上版本，�
 
 # 运行
 因为程序需要读写文件，请到DevilYuan目录夹下以管理者权限运行`python DyMainWindow.py`
+**如果你运行报错，并且是Anaconda5.3(Python3.7)的运行环境，请到Anaconda Prompt里执行`python DyMainWindow.py`**
 
 # 运行后的步骤
 1. [配置DevilYuan系统](https://github.com/moyuanz/DevilYuan/blob/master/docs/config/Config.md)
