@@ -1307,6 +1307,9 @@ class DyStockTableWidget(DyStatsTableWidget):
         """
             子类改写
         """
+        if headerItem is None:
+            return
+            
         self._upDownRatioAction.setEnabled('涨幅' in headerItem.text())
         self._limitUpRatioAction.setEnabled('涨幅' in headerItem.text())
 
