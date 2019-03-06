@@ -3,6 +3,9 @@
 """
 Module implementing DyMainWindow.
 """
+import warnings
+warnings.filterwarnings('ignore')
+
 import os
 import json
 
@@ -176,7 +179,8 @@ class DyMainWindow(QMainWindow, Ui_MainWindow):
 
 
 if __name__ == "__main__":
-
+    warnings.filterwarnings('ignore')
+    
     """
     import ctypes
     whnd = ctypes.windll.kernel32.GetConsoleWindow()
@@ -184,7 +188,7 @@ if __name__ == "__main__":
         ctypes.windll.user32.ShowWindow(whnd, 0)
         ctypes.windll.kernel32.CloseHandle(whnd)
     """
-
+    
     import ctypes
     import platform
 
