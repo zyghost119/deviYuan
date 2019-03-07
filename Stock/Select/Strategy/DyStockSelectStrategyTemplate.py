@@ -27,7 +27,7 @@ class DyStockSelectStrategyTemplate(object):
     autoFillDays = False
 
     # 只在@autoFillDays is True时有效
-    # 只向策略推送@baseDate不停牌的股票日线数据，若@baseDate是非交易日，则是向前离它最近的交易日
+    # @True：只向策略推送@baseDate不停牌的股票日线数据，若@baseDate是非交易日，则是向前离它最近的交易日
     optimizeAutoFillDays = False
 
     continuousTicks = False # Ticks数据是不是以连续模式推入策略，非连续模式为{date: ticksDF of date}

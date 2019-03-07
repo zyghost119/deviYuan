@@ -185,19 +185,14 @@ class DyStockSelectSelectEngine(object):
             补全个股日线数据
             @orgDf: 原始切片日线数据
         """
-        # 基准日期不在原始切片数据里，则没有补全的意义
-        if orgDf is None:
+        # 数据是完整的
+        if orgDf is not None and orgDf.shape[0] == self._expectedDaysSize:
             return orgDf
 
-        if orgDf.shape[0] == self._expectedDaysSize:
-            return orgDf
-
-        # 基准日期不在原始切片数据里，则没有补全的意义
-        if self._baseDay not in orgDf.index:
-            if self._strategy.optimizeAutoFillDays: # 策略优化自动补全日线数据
+        # 策略优化自动补全日线数据
+        if self._strategy.optimizeAutoFillDays:
+            if orgDf is None or self._baseDay not in orgDf.index: # 基准日期不在原始切片数据里，则没有补全的意义
                 return None
-            else:
-                return orgDf
 
         if not self._errorDaysEngine.loadCode(code, self._onDaysLoadDates):
             return orgDf
