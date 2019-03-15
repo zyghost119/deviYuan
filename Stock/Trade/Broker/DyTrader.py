@@ -18,6 +18,9 @@ class DyTrader(object):
     pollingCurEntrustTimer = 1
     maxRetryNbr = 3 # 最大重试次数
 
+    curEntrustHeaderNoIndex = None
+    curEntrustHeaderStateIndex = None
+
 
     def __init__(self, eventEngine, info, configFile=None, accountConfigFile=None):
         self._eventEngine = eventEngine
@@ -156,6 +159,23 @@ class DyTrader(object):
 
         return recognizedCode
 
+    def _checkNewEntrusts(self, newEntrusts):
+        """
+            Prevent we get wrong data from broker
+        """
+        # We think no need to check entrusts format, which will be handled by subclass.
+        if self.curEntrustHeaderNoIndex is None:
+            return True
+
+        maxIndex = max(self.curEntrustHeaderNoIndex, self.curEntrustHeaderStateIndex)
+
+        for newEntrust in newEntrusts:
+            if maxIndex >= len(newEntrust):
+                self._info.print('{}: 当日委托数据错误: {}'.format(self.brokerName, newEntrust), DyLogData.warning)
+                return False
+        
+        return True
+
     def _pollCurEntrusts(self, event):
         """
             定时轮询当日委托直到所有委托都是完成状态
@@ -163,6 +183,9 @@ class DyTrader(object):
         # 从券商GET当日委托
         header, newEntrusts = self.getCurEntrusts()
         if header is None:
+            return
+
+        if not self._checkNewEntrusts(newEntrusts):
             return
         
         # compare state for each entrust
@@ -505,13 +528,6 @@ class DyTrader(object):
 
         return None
 
-    def _setCurEntrustHeaderIndex(self):
-        if self.curEntrustHeaderNoIndex is not None:
-            return
-
-        self.curEntrustHeaderNoIndex = self.curEntrustHeader.index(self.curEntrustHeaderNo)
-        self.curEntrustHeaderStateIndex = self.curEntrustHeader.index(self.curEntrustHeaderState)
-
     def _compareEntrusts(self, entrusts, newEntrusts):
         """
             比较两组委托的状态
@@ -534,9 +550,6 @@ class DyTrader(object):
         else:
             stateChange = False
             allDone = True
-
-        # 设置index
-        self._setCurEntrustHeaderIndex()
 
         # compare state for each new entrust
         for newEntrust in newEntrusts:
