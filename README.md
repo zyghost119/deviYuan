@@ -133,6 +133,10 @@ DevilYuan股票量化系统由python编写，支持python3.4及以上版本，�
 
 QQ群：293368752
 
+# 捐赠
+- [支付宝](https://github.com/moyuanz/DevilYuan/blob/master/docs/misc/alipay.jpg)
+- [微信支付](https://github.com/moyuanz/DevilYuan/blob/master/docs/misc/wechatpay.png)
+
 # License
 MIT
 
