@@ -36,3 +36,21 @@ class DyStockBackTestingStrategyAckData:
 
 class DyStockBackTestingCommon:
     maViewerIndicator = 'close'
+
+
+class DyStockBackTestingContext:
+    """
+        回测时，由于策略@prepare函数会有大量重复的计算，所以需要context缓存数据，提高策略回测效率。
+        context给策略提供相应的回测周期和策略参数，然后会传给策略的@prepare函数。
+        这样策略可以根据整个回测周期，一次性准备好所有的回测数据，
+        然后存到context里(由于python的动态特性，策略可以直接在context里成员变量)。
+        策略可以利用pandas进行矢量运算，把选股结果针对整个回测周期一次性完成。
+        context将会由回测策略引擎保存，每次开盘传给策略@prepare函数。
+
+        对实盘来讲，context是None，策略可以认为@self.startDate = self.endDate = date，
+        这样对于策略来讲，可以回测和实盘统一@prepare函数的实现。
+    """
+    def __init__(self, period, strategyParam):
+        self.startDate, self.endDate = period # 策略回测周期
+        self.strategyParam = strategyParam # 来自回测窗口界面的策略回测参数
+        

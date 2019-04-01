@@ -5,7 +5,7 @@ try:
     from WindPy import *
 except ImportError:
     if DyStockCommon.WindPyInstalled:
-        print("DevilYuan-Warnning: Import WindPy error, switch default data source of stock history days to TuShare!")
+        print("DevilYuan-Warning: Import WindPy error, switch default data source of stock history days to TuShare!")
         DyStockCommon.WindPyInstalled = False
 
 

@@ -1072,6 +1072,10 @@ class DyStockCtaEngine(object):
     def errorDataEngine(self):
         return self._errorDataEngine
 
+    @property
+    def backTestingContext(self):
+        return None
+
     def getCurPos(self, strategyCls):
         """
             这里并不关心策略的运行状态，只是返回对应账户的数据

@@ -65,6 +65,9 @@ class DyStockBackTestingCtaEngine(object):
         self._errorDataEngine = DyStockDataEngine(eventEngine, errorInfo, registerEvent=False, dbCache=dbCache)
         self._errorDaysEngine = self._errorDataEngine.daysEngine
 
+        # create backtesting context
+        self._context = DyStockBackTestingContext(self._strategyPeriod, self._strategyParam)
+
         self._curInit()
 
     def _printStrategyClsParams(self, strategyCls):
@@ -666,6 +669,10 @@ class DyStockBackTestingCtaEngine(object):
     @property
     def errorDataEngine(self):
         return self._errorDataEngine
+
+    @property
+    def backTestingContext(self):
+        return self._context
 
     def getCurPos(self, strategyCls):
         return self._accountManager.curPos

@@ -84,6 +84,8 @@ class DyStockCtaTemplate(object):
         self._state = state
         self._strategyParam = strategyParam
 
+        self._newPrepareInterface = None # 策略是否使用了新的@prepare接口
+
         # 初始化当日相关数据
         self.__curInit()
 
@@ -285,11 +287,11 @@ class DyStockCtaTemplate(object):
         self._ctaEngine.saveOnClose(self._curTDay, self.__class__, self._curSavedData)
 
     @classmethod
-    def prepare(cls, date, dataEngine, info, codes=None, errorDataEngine=None, strategyParam=None, isBackTesting=False):
+    def prepare(cls, date, dataEngine, info, codes=None, errorDataEngine=None, backTestingContext=None):
         """
             类方法，策略开盘前的准备数据（由用户选择继承实现）
             @date: 前一交易日。由当日交易调用，@date为当日的前一交易日。
-            @strategyParam: 策略参数，回测时有效
+            @backTestingContext: 回测时有效
             @return: None-prepare错误, {}-策略没有准备数据
         """
         return {}
@@ -522,6 +524,33 @@ class DyStockCtaTemplate(object):
 
         self._ctaEngine.putStockMarketStrengthUpdateEvent(self.__class__, time, marketStrengthInfo.copy())
 
+    def _callPrepare(self, date, codes, isBackTesting):
+        """
+            调用策略的@prepare接口
+        """
+        if self._newPrepareInterface is None:
+            try:
+                data = self.prepare(date, self._ctaEngine.dataEngine, self._info, codes, self._ctaEngine.errorDataEngine, self._strategyParam, isBackTesting)
+                
+                self._newPrepareInterface = False
+
+                warningStr = "DevilYuan-Warning: 策略[{}]请使用@prepare新接口: def prepare(cls, date, dataEngine, info, codes=None, errorDataEngine=None, backTestingContext=None)".format(self.chName)
+                print(warningStr)
+            except TypeError:
+                # new @parepare interface
+                data = self.prepare(date, self._ctaEngine.dataEngine, self._info, codes, self._ctaEngine.errorDataEngine, self._ctaEngine.backTestingContext)
+
+                self._newPrepareInterface = True
+
+            return data
+
+        if self._newPrepareInterface:
+            data = self.prepare(date, self._ctaEngine.dataEngine, self._info, codes, self._ctaEngine.errorDataEngine, self._ctaEngine.backTestingContext)
+        else:
+            data = self.prepare(date, self._ctaEngine.dataEngine, self._info, codes, self._ctaEngine.errorDataEngine, self._strategyParam, isBackTesting)
+
+        return data
+
     def loadPreparedData(self, date, codes=None):
         """
             策略开盘前载入所需的准备数据和策略实例属性。在策略的@onOpen实现里被调用。
@@ -547,10 +576,11 @@ class DyStockCtaTemplate(object):
                 return None
 
             # prepare
-            data = self.prepare(date, self._ctaEngine.dataEngine, self._info, codes, self._ctaEngine.errorDataEngine, self._strategyParam, isBackTesting)
+            data = self._callPrepare(date, codes, isBackTesting)
             if data is None:
                 self._info.print('策略准备数据失败', DyLogData.error)
                 return None
+                
             try:
                 data = json.loads(json.dumps(data)) # Sometime there're non-python objects in @data, use this tricky way to convert to python objects.
             except:
