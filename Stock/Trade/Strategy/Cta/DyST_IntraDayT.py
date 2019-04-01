@@ -160,13 +160,13 @@ class DyST_IntraDayT(DyStockCtaTemplate):
 
     #################### 开盘前的数据准备 ####################
     @classmethod
-    def prepare(cls, date, dataEngine, info, codes=None, errorDataEngine=None, strategyParam=None, isBackTesting=False):
+    def prepare(cls, date, dataEngine, info, codes=None, errorDataEngine=None, backTestingContext=None):
         code = DyST_IntraDayT.targetCode
 
-        if isBackTesting:
-            atrPeriod = strategyParam['ATR周期']
-            fastPeriod = strategyParam['快速周期']
-            slowPeriod = strategyParam['慢速周期']
+        if backTestingContext is not None:
+            atrPeriod = backTestingContext.strategyParam['ATR周期']
+            fastPeriod = backTestingContext.strategyParam['快速周期']
+            slowPeriod = backTestingContext.strategyParam['慢速周期']
         else:
             atrPeriod = cls.atrPeriod
             fastPeriod = cls.fastPeriod
