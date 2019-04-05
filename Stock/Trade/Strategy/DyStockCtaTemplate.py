@@ -297,7 +297,7 @@ class DyStockCtaTemplate(object):
         return {}
 
     @classmethod
-    def preparePos(cls, date, dataEngine, info, posCodes=None, errorDataEngine=None, strategyParam=None, isBackTesting=False):
+    def preparePos(cls, date, dataEngine, info, posCodes=None, errorDataEngine=None, backTestingContext=None):
         """
             类方法，策略开盘前的持仓准备数据（由用户选择继承实现）
             @date: 前一交易日。由当日交易调用，@date为当日的前一交易日。
@@ -551,6 +551,18 @@ class DyStockCtaTemplate(object):
 
         return data
 
+    def _callPreparePos(self, date, posCodes, isBackTesting):
+        """
+            调用策略的@preparePos接口
+        """
+        # 必须跟@prepare接口匹配
+        if self._newPrepareInterface:
+            data = self.preparePos(date, self._ctaEngine.dataEngine, self._info, posCodes, self._ctaEngine.errorDataEngine, self._ctaEngine.backTestingContext)
+        else:
+            data = self.preparePos(date, self._ctaEngine.dataEngine, self._info, posCodes, self._ctaEngine.errorDataEngine, self._strategyParam, isBackTesting)
+
+        return data
+
     def loadPreparedData(self, date, codes=None):
         """
             策略开盘前载入所需的准备数据和策略实例属性。在策略的@onOpen实现里被调用。
@@ -616,7 +628,7 @@ class DyStockCtaTemplate(object):
             date = self._ctaEngine.tDaysOffsetInDb(DyTime.getDateStr(date, -1))
 
             # prepare
-            data = self.preparePos(date, self._ctaEngine.dataEngine, self._info, posCodes, self._ctaEngine.errorDataEngine, self._strategyParam, isBackTesting)
+            data = self._callPreparePos(date, posCodes, isBackTesting)
             if data is None:
                 self._info.print('策略准备持仓数据失败', DyLogData.error)
                 return None
