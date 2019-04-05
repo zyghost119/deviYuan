@@ -136,7 +136,7 @@ class DyST_LimitUpDownMonitor(DyStockCtaTemplate):
 
     #################### 开盘前的数据准备 ####################
     @classmethod
-    def prepare(cls, date, dataEngine, info, codes=None, errorDataEngine=None, strategyParam=None, isBackTesting=False):
+    def prepare(cls, date, dataEngine, info, codes=None, errorDataEngine=None, backTestingContext=None):
         """
             @date: 回测或者实盘时，此@date为前一交易日
             @return: {'codes': [code]}
