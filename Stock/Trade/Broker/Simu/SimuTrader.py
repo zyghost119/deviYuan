@@ -26,7 +26,7 @@ class SimuTrader(WebTrader):
     positionHeader = ['证券代码', '证券名称', '实际数量', '可用数量', '市值(元)', '最新价格', '成本价(元)', '浮动盈亏(元)', '盈亏比(%)', '除权除息', '建仓时间'] # 国泰君安没有'盈亏比(%)'和'除权除息'字段
 
     accountPath = 'Stock/Program/Broker/{0}'.format(brokerName)
-    initCash = 200000
+    initCash = 1000000
 
 
     def __init__(self, eventEngine, info):

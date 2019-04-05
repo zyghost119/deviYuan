@@ -54,7 +54,7 @@ class DyStockBackTestingSettingDlg(QDialog):
 
         cashLabel = QLabel('初始资金(元)')
         cashLabel.setStyleSheet("color:#4169E1")
-        self._cashLineEdit = QLineEdit('200000')
+        self._cashLineEdit = QLineEdit('1000000')
 
         riskGuardLabel = QLabel('风控守护值(日)')
         riskGuardLabel.setStyleSheet("color:#4169E1")
