@@ -119,7 +119,9 @@ class DyStockSelectStrategyWidget(DyTreeWidget):
         newFields = []
         for field in fields:
             if isinstance(field, list):
-                newFields.append(self._transform(field))
+                retFields = self._transform(field)
+                if retFields:
+                    newFields.append(retFields)
             else:
                 if hasattr(field,  'chName'):
                     newFields.append(field.chName)

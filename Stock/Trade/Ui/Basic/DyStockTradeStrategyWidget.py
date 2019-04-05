@@ -70,14 +70,17 @@ class DyStockTradeStrategyWidget(DyTreeWidget):
         newFields = []
         for field in fields:
             if isinstance(field, list):
-                newFields.append(self._transform(field))
+                retFields = self._transform(field)
+                if retFields:
+                    newFields.append(retFields)
             else:
                 if hasattr(field,  'chName'):
-                    newFields.append(field.chName)
-                    newFields.append(['运行'])
-                    newFields.append(['监控'])
+                    if field.__name__[-3:] != '_BT': # ignore pure backtesting strategy
+                        newFields.append(field.chName)
+                        newFields.append(['运行'])
+                        newFields.append(['监控'])
 
-                    self._strategies[field.chName] = [DyStockStrategyState(), field]
+                        self._strategies[field.chName] = [DyStockStrategyState(), field]
                 else:
                     newFields.append(field)
 
