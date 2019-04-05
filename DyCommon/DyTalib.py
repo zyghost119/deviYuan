@@ -186,12 +186,16 @@ def KDJ(highs, lows, closes, N=9, M1=3, M2=3, adjust=DyTalibExpAdjust):
     J = 3 * np.array(K) - 2 * np.array(D)
     return K, D, J
 
-def SINGLE_GOLDEN_CROSS(A, B):
+def SINGLE_CROSS(A, B):
     if A[-2] < B[-2] and A[-1] > B[-1]:
         return True
     
     return False
 
-def GOLDEN_CROSS(A, B):
+def CROSS(A, B):
+    """
+        A<B then A>B  A上穿B
+        B>A then A<B B下穿A
+    """
     var = np.where(A < B, 1, 0)
-    return (pd.Series(var).diff() < 0).values
+    return pd.Series(var, index=A.index).diff() < 0
