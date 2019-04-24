@@ -9,9 +9,10 @@ DevilYuan股票量化系统由python编写，支持python3.4及以上版本，�
     - 策略回测
     - 实盘交易
 - 历史数据均免费来自于网络
-    - Wind免费个人接口
+    - Wind免费个人接口(最近好像没法用了，推荐使用TuSharePro)
     - TuShare(TuSharePro)
     - 通达信
+- 全市场股票监控
 - 实盘微信提醒及交互
 - 一键挂机
 - 全自动交易
@@ -52,8 +53,8 @@ DevilYuan股票量化系统由python编写，支持python3.4及以上版本，�
             - 同时客户端不能最小化也不能处于精简模式
         - **运行同花顺交易接口之前，务必先手动启动同花顺下单程序并登录**
 - 安装[Wind个人免费Python接口](http://dajiangzhang.com/document) **(Windows, 可选)**
-    - 若不安装Wind接口，股票代码表，交易日数据和历史日线数据将使用TuShare接口。TuShare这一块的数据更新速度比较慢。并且Wind的复权因子数据比较准确，建议安装Wind。但Wind的接口对数据流量有限制。
-    - **或者你可以使用TuSharePro，请到[这儿](https://tushare.pro/register?reg=124019)注册自己的token。** DY系统里，有些策略或者功能需要TuSharePro 300积分。
+    - 若不安装Wind接口，股票代码表，交易日数据和历史日线数据将使用TuShare接口。TuShare这一块的数据更新速度比较慢。并且Wind的复权因子数据比较准确，建议安装Wind。但Wind的接口对数据流量有限制。**最近好像Wind个人免费接口没法使用了，推荐使用TuSharePro。**
+    - **或者你可以使用TuSharePro，请到[这儿](https://tushare.pro/register?reg=124019)注册自己的token。** DY系统里，有些策略或者功能需要TuSharePro 300积分。关于如何配置TuSharePro，请参考[配置DevilYuan系统](https://github.com/moyuanz/DevilYuan/blob/master/docs/config/Config.md)
 - 到[Server酱](http://sc.ftqq.com/3.version)注册一个SCKEY，这样实盘时的信号可以微信铃声通知 **(可选)**
 - 安装[Vistual Studio社区版](https://www.visualstudio.com/zh-hans/)，并勾选Python插件 **(可选)**
     - 本项目是用VS2017开发的。你可以选择是用VS2017，或者用其他IDE 
