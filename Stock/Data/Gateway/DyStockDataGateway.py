@@ -383,7 +383,7 @@ class DyStockDataGateway(object):
                 print("从TuSharePro获取股票代码表异常: {}, retrying...".format(ex))
                 sleep(1)
         else:
-            self._info.print("从TuSharePro获取股票代码表异常: {}".format(lastEx), DyLogData.error)
+            self._info.print("从TuSharePro获取股票代码表异常: {}, retried {} times".format(lastEx, retry), DyLogData.error)
             return None
 
         self._info.print("从TuSharePro获取股票代码表成功")
