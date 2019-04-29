@@ -367,14 +367,23 @@ class DyStockDataGateway(object):
         self._info.print("从TuSharePro获取股票代码表...")
 
         self._startTuSharePro()
-        try:
-            df = self._tuSharePro.stock_basic(exchange='', list_status='L', fields='ts_code,name')
-            data = df[['ts_code', 'name']].values.tolist()
-            codes = {}
-            for code, name in data:
-                codes[code] = name
-        except Exception as ex:
-            self._info.print("从TuSharePro获取股票代码表异常: {}".format(ex), DyLogData.error)
+
+        lastEx = None
+        retry = 3
+        for _ in range(retry):
+            try:
+                df = self._tuSharePro.stock_basic(exchange='', list_status='L', fields='ts_code,name')
+                data = df[['ts_code', 'name']].values.tolist()
+                codes = {}
+                for code, name in data:
+                    codes[code] = name
+                break
+            except Exception as ex:
+                lastEx = ex
+                print("从TuSharePro获取股票代码表异常: {}, retrying...".format(ex))
+                sleep(1)
+        else:
+            self._info.print("从TuSharePro获取股票代码表异常: {}".format(lastEx), DyLogData.error)
             return None
 
         self._info.print("从TuSharePro获取股票代码表成功")
