@@ -85,6 +85,7 @@ class DyStockCtaTemplate(object):
         self._strategyParam = strategyParam
 
         self._newPrepareInterface = None # 策略是否使用了新的@prepare接口
+        self._newPreparePosInterface = None # 策略是否使用了新的@preparePos接口
 
         # 初始化当日相关数据
         self.__curInit()
@@ -555,8 +556,23 @@ class DyStockCtaTemplate(object):
         """
             调用策略的@preparePos接口
         """
-        # 必须跟@prepare接口匹配
-        if self._newPrepareInterface:
+        if self._newPreparePosInterface is None:
+            try:
+                data = self.preparePos(date, self._ctaEngine.dataEngine, self._info, posCodes, self._ctaEngine.errorDataEngine, self._strategyParam, isBackTesting)
+                
+                self._newPreparePosInterface = False
+
+                warningStr = "DevilYuan-Warning: 策略[{}]请使用@preparePos新接口: def preparePos(cls, date, dataEngine, info, posCodes=None, errorDataEngine=None, backTestingContext=None)".format(self.chName)
+                print(warningStr)
+            except TypeError:
+                # new @pareparePos interface
+                data = self.preparePos(date, self._ctaEngine.dataEngine, self._info, posCodes, self._ctaEngine.errorDataEngine, self._ctaEngine.backTestingContext)
+
+                self._newPreparePosInterface = True
+
+            return data
+
+        if self._newPreparePosInterface:
             data = self.preparePos(date, self._ctaEngine.dataEngine, self._info, posCodes, self._ctaEngine.errorDataEngine, self._ctaEngine.backTestingContext)
         else:
             data = self.preparePos(date, self._ctaEngine.dataEngine, self._info, posCodes, self._ctaEngine.errorDataEngine, self._strategyParam, isBackTesting)
