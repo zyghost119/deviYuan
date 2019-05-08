@@ -270,6 +270,13 @@ class DyStockAccountManager:
         entrust.dyEntrustId = '{0}.{1}_{2}'.format(self.broker, self._curTDay, curEntrustCount)
         entrust.strategyCls = strategyCls
 
+        # check price correct or not
+        # 实盘发现股票的委托价超过小数点两位
+        if entrust.code in DyStockCommon.funds:
+            entrust.price = round(entrust.price, 3)
+        else:
+            entrust.price = round(entrust.price, 2)
+
         # add into 当日委托
         self._curEntrusts.setdefault(code, [])
         self._curEntrusts[code].append(copy.copy(entrust))
