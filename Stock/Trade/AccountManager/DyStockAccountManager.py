@@ -815,9 +815,21 @@ class DyStockAccountManager:
             if pos is None:
                 continue
 
+            # 检查价格复权因子。正常情况，如果送股，会导致成本价变低。
+            # 但如果做T，可能会导致成本为0或者为负。所以这里采用简单的处理方法。
+            # 所以如果恰巧某只股票今日除权除息，会导致对应的持仓的价格相关数值不太准确。
+            try:
+                priceAdjFactor = pos.cost/cost
+            except:
+                priceAdjFactor = 0
+
+            if priceAdjFactor <= 0:
+                self._info.print("{}: {}({})价格复权因子错误，设成默认值1。pos.cost={}, broker.cost={}".format(self.brokerName, pos.code, pos.name, pos.cost, cost), DyLogData.warning)
+                priceAdjFactor = 1
+
             # set sync data firstly
             self._curPosSyncData[code] = {'volumeAdjFactor': totalVolume/pos.totalVolume,
-                                          'priceAdjFactor': pos.cost/cost,
+                                          'priceAdjFactor': priceAdjFactor,
                                           'cost': cost
                                           }
 
