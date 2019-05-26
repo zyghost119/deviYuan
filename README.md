@@ -34,6 +34,7 @@ DevilYuan股票量化系统由python编写，支持python3.4及以上版本，�
 # 运行前的准备
 - 支持的操作系统：Windows 7/8/10, Linux(不支持实盘)
 - 安装[Anaconda](https://www.anaconda.com/download/)，python3.4及以上版本 64位版本(32位应该也可以，但没测试过)
+    - 最新版的Anaconda可能会不太稳定，你可以装[老版本的Anaconda](https://repo.anaconda.com/archive/)，比如Anaconda3-5.x.x系列，或者Anaconda3-4.x.x系列
 - 安装[MongoDB](https://www.mongodb.com/download-center#production)，并将[MongoDB配置为系统服务](https://docs.mongodb.com/manual/tutorial/install-mongodb-on-windows/#configure-a-windows-service-for-mongodb-community-edition)
     -  如果你想下载更多的个股历史分笔数据，建议配备比较大的的硬盘。毛估估，现在一年的全市场个股分笔数据可能有80G左右。
     -  [MogonDB客户端](https://robomongo.org/download)
