@@ -364,10 +364,7 @@ class DyStockMongoDbEngine(object):
         collection = self._getStockDaysDb()[code]
 
         # create index
-        try:
-            collection.index_information()
-        except Exception as ex: # collection or database not existing
-            collection.create_index([('datetime', pymongo.ASCENDING)], unique=True)
+        collection.create_index([('datetime', pymongo.ASCENDING)], unique=True)
 
         # update to DB
         try:
@@ -384,10 +381,7 @@ class DyStockMongoDbEngine(object):
         collection = self._getTradeDayTableCollection()
 
         # create index
-        try:
-            collection.index_information()
-        except Exception as ex: # collection or database not existing
-            collection.create_index([('datetime', pymongo.ASCENDING)], unique=True)
+        collection.create_index([('datetime', pymongo.ASCENDING)], unique=True)
 
         # update into DB
         try:
@@ -407,10 +401,7 @@ class DyStockMongoDbEngine(object):
         collection = self._getCodeTableCollection()
 
         # create index
-        try:
-            collection.index_information()
-        except Exception as ex: # collection or database not existing
-            collection.create_index([('code', pymongo.ASCENDING)], unique=True)
+        collection.create_index([('code', pymongo.ASCENDING)], unique=True)
 
         # update into DB
         try:
@@ -616,10 +607,7 @@ class DyStockMongoDbEngine(object):
         collection = self._client[self.stockTicksDb][code]
 
         # create index
-        try:
-            collection.index_information()
-        except Exception as ex: # collection or database not existing
-            collection.create_index([('datetime', pymongo.ASCENDING)], unique=True)
+        collection.create_index([('datetime', pymongo.ASCENDING)], unique=True)
 
         # insert ticks into DB
         try:
@@ -822,10 +810,7 @@ class DyStockMongoDbEngine(object):
         collection = self._client[self.sectorCodeDbMap[sectorCode]][date]
 
         # create index
-        try:
-            collection.index_information()
-        except Exception as ex: # collection or database not existing
-            collection.create_index([('code', pymongo.ASCENDING)], unique=True)
+        collection.create_index([('code', pymongo.ASCENDING)], unique=True)
 
         # update into DB
         try:
