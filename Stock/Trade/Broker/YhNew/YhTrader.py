@@ -112,9 +112,12 @@ class YhTrader(UiTrader):
         marketValue = 0 # 账户市值
         for pos in self._positions:
             code = DyStockCommon.getDyStockCode(pos[0])
+            if not DyStockCommon.isValidDyStockCode(code): # 有时持仓里会有配债
+                continue
+
             tick = ticks.get(code)
             if tick is None:
-                self._info.print('银河证券: 无法获取{0}({1})的Tick数据'.format(code, pos[1]), DyLogData.warning)
+                self._info.print('银河证券: 无法获取{}({})的Tick数据'.format(code, pos[1]), DyLogData.warning)
                 marketValue += float(pos[9])
                 continue
 

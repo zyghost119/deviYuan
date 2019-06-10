@@ -128,6 +128,9 @@ class ThsTrader(UiTrader):
         marketValue = 0 # 账户市值
         for pos in self._positions:
             code = DyStockCommon.getDyStockCode(pos[1])
+            if not DyStockCommon.isValidDyStockCode(code): # 有时持仓里会有配债
+                continue
+                
             tick = ticks.get(code)
             if tick is None:
                 self._info.print('同花顺: 无法获取{}({})的Tick数据'.format(code, pos[2]), DyLogData.warning)

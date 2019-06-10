@@ -112,6 +112,22 @@ class DyStockCommon(object):
         assert(0)
         return None
 
+    def isValidDyStockCode(code):
+        """
+            @code: DY stock code
+        """
+        if code[-3:] == '.SH':
+            if code[:3] in ['600', '601', '603']:
+                return True
+            
+            if code[0] == '5':
+                return True
+        else:
+            if code[:3] in ['000', '300', '002']:
+                return True
+
+        return False
+
     def getDyStockCode(code):
         return (code[:6] + '.SH') if code[0] in ['6', '5'] else (code[:6] + '.SZ')
 
