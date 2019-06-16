@@ -110,7 +110,9 @@ class DyST_LimitUpDownMonitor(DyStockCtaTemplate):
     def _count(self, ticks):
         limitUpCount = 0
         limitDownCount = 0
+        sampleTick = None
         for _, tick in ticks.items():
+            sampleTick = tick
             increase = (tick.price - tick.preClose)/tick.preClose*100
 
             if increase >= DyStockCommon.limitUpPct:
@@ -119,8 +121,16 @@ class DyST_LimitUpDownMonitor(DyStockCtaTemplate):
             if increase <= DyStockCommon.limitDownPct:
                 limitDownCount += 1
 
-        self._limitUpCounts.append([self.marketTime, limitUpCount])
-        self._limitDownCounts.append([self.marketTime, limitDownCount])
+        # for backtesting
+        marketTime = self.marketTime
+        if marketTime is None and sampleTick is not None:
+            marketTime = sampleTick.time
+
+        if marketTime is None:
+            return
+
+        self._limitUpCounts.append([marketTime, limitUpCount])
+        self._limitDownCounts.append([marketTime, limitDownCount])
 
     @DyStockCtaTemplate.onTicksWrapper
     def onTicks(self, ticks):
