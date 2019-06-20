@@ -535,7 +535,8 @@ class DyStockCtaEngine(object):
             self._info.print('股票CTA引擎: 结束交易日[{}]'.format(self._curDate), DyLogData.ind2)
 
             # save strategies and stop strategy running
-            for strategy, _ in self._strategies.values():
+            strategies = copy.deepcopy(self._strategies)
+            for strategy, _ in strategies.values():
                 # save
                 self._strategyMirror[strategy.__class__] = strategy.state
 
