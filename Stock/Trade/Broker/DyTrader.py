@@ -451,7 +451,7 @@ class DyTrader(object):
         szIndexTick = ticks.get(DyStockCommon.szIndex)
         shIndexTick = ticks.get(DyStockCommon.shIndex)
 
-        if szIndexTick is not None and shIndextick is not None:
+        if szIndexTick is not None and shIndexTick is not None:
             self._exchangeDatetime = max(szIndexTick.datetime, shIndexTick.datetime)
         elif szIndexTick is not None:
             self._exchangeDatetime = szIndexTick.datetime
