@@ -361,10 +361,18 @@ class DyStockMongoDbEngine(object):
     # -------------------- 公共接口 --------------------
     def updateDays(self, code, data):
         """ @data: [{row0}, {row1}] """
-        collection = self._getStockDaysDb()[code]
-
         # create index
-        collection.create_index([('datetime', pymongo.ASCENDING)], unique=True)
+        for _ in range(3):
+            try:
+                collection = self._getStockDaysDb()[code]
+                collection.create_index([('datetime', pymongo.ASCENDING)], unique=True)
+                break
+            except pymongo.errors.AutoReconnect as ex:
+                print("更新{}日线数据到MongoDB异常: {}".format(code, str(ex) + ', ' + str(ex.details)))
+                sleep(1)
+        else:
+            self._info.print("更新{}日线数据到MongoDB异常: {}".format(code, str(ex) + ', ' + str(ex.details)), DyLogData.error)
+            return False
 
         # update to DB
         try:
