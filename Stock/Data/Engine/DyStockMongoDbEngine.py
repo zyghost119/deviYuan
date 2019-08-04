@@ -368,10 +368,11 @@ class DyStockMongoDbEngine(object):
                 collection.create_index([('datetime', pymongo.ASCENDING)], unique=True)
                 break
             except pymongo.errors.AutoReconnect as ex:
+                lastEx = ex
                 print("更新{}日线数据到MongoDB异常: {}".format(code, str(ex) + ', ' + str(ex.details)))
                 sleep(1)
         else:
-            self._info.print("更新{}日线数据到MongoDB异常: {}".format(code, str(ex) + ', ' + str(ex.details)), DyLogData.error)
+            self._info.print("更新{}日线数据到MongoDB异常: {}".format(code, str(lastEx) + ', ' + str(lastEx.details)), DyLogData.error)
             return False
 
         # update to DB
